@@ -54,11 +54,15 @@
                         },
                         clear: function() {
                             this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
+                        },
+                        reset: function() {
+                            this.score = 0;
                         }
                     }
 
                     player = {
                         size: 20,
+                        bsize: 8,
                         x: 20,
                         y: game.canvas.height/2,
                         yvel: 0,
@@ -66,6 +70,8 @@
                         render: function() {
                             game.ctx.fillStyle = "yellow";
                             game.ctx.fillRect(this.x,this.y,this.size,this.size);
+                            game.ctx.fillStyle = "orange";
+                            game.ctx.fillRect(this.x+this.size,this.y+(this.size/2),this.bsize,this.bsize);
                         },
                         update: function() {
                             this.yvel -= 0.1;
@@ -92,7 +98,9 @@
                         render: function() {
                             game.ctx.fillStyle = "green";
                             game.ctx.fillRect(this.x,0,20,this.y-this.gap);
+                            game.ctx.fillRect(this.x-5,this.y-this.gap-10,30,10);
                             game.ctx.fillRect(this.x,this.y+this.gap,20,game.canvas.height-this.y+this.gap);
+                            game.ctx.fillRect(this.x-5,this.y+this.gap,30,10);
                         },
                         update: function() {
                             this.x -= 2
@@ -135,8 +143,9 @@
                     }
 
                     function reset() {
-                        pipe.reset()
-                        player.reset()
+                        pipe.reset();
+                        player.reset();
+                        game.reset();
                     }
                 </script>
                 <p>&nbsp;</p>
