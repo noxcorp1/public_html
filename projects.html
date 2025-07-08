@@ -11,7 +11,7 @@
     <link rel="stylesheet" type="text/css" href="tswnavbar.css" />
 </head>
 
-<body onload="init()">
+<body>
 
     <div id="tswcontainer">
         <div id="tswheader">
@@ -31,17 +31,26 @@
                 <!-- start of content column: insert your content here -->
 
                 <h1>Projects</h1>
+                <h2>Flappy Bird</h2>
+                <button onclick="init()">START</button>
+                <button onclick="reset()">RESET</button>
+                <button onclick="press()">JUMP</button>
                 <script>
                     game = {
                         canvas: document.createElement("canvas"),
+                        init: false,
                         start: function(width,height) {
-                            this.canvas.width = width;
-                            this.canvas.height = height;
-                            this.canvas.style = "background: blue";
-                            this.ctx = this.canvas.getContext("2d");
-                            const place = document.getElementById("tswcontproper");
-                            place.appendChild(this.canvas);
-                            this.loop = setInterval(tick,20);
+                            if (!this.init) {
+                                this.init = true;
+                                this.canvas.width = width;
+                                this.canvas.height = height;
+                                this.canvas.style = "background: blue";
+                                this.ctx = this.canvas.getContext("2d");
+                                const place = document.getElementById("tswcontproper");
+                                place.appendChild(this.canvas);
+                                this.score = 0;
+                                this.loop = setInterval(tick,20);
+                            }
                         },
                         clear: function() {
                             this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
@@ -50,35 +59,85 @@
 
                     player = {
                         size: 20,
-                        x: 10,
+                        x: 20,
                         y: game.canvas.height/2,
                         yvel: 0,
+                        dead: false,
                         render: function() {
                             game.ctx.fillStyle = "yellow";
                             game.ctx.fillRect(this.x,this.y,this.size,this.size);
                         },
                         update: function() {
-                            this.yvel -= 0.2;
+                            this.yvel -= 0.1;
                             this.y -= this.yvel;
                             if (this.y > game.canvas.height) {
-                                this.y = game.canvas.height/2;
-                                this.yvel = 0;
+                                this.dead = true;
                             }
+                            if (this.x+this.size > pipe.x && this.x < pipe.x+20 && (this.y+this.size > pipe.y+pipe.gap || this.y < pipe.y-pipe.gap)) {
+                                this.dead = true;
+                            }
+                        },
+                        reset: function() {
+                            this.dead = false;
+                            this.x = 10;
+                            this.y = game.canvas.height/2;
+                            this.yvel = 0;
+                        }
+                    }
+
+                    pipe = {
+                        gap: 35,
+                        x: game.canvas.width,
+                        y: Math.floor(Math.random()*(game.canvas.height-this.gap*4))+this.gap*2,
+                        render: function() {
+                            game.ctx.fillStyle = "green";
+                            game.ctx.fillRect(this.x,0,20,this.y-this.gap);
+                            game.ctx.fillRect(this.x,this.y+this.gap,20,game.canvas.height-this.y+this.gap);
+                        },
+                        update: function() {
+                            this.x -= 2
+                            if (this.x < -20) {
+                                this.reset();
+                                game.score += 1
+                            }
+                        },
+                        reset: function() {
+                            this.x = game.canvas.width;
+                            this.y = Math.floor(Math.random()*(game.canvas.height-this.gap*4))+this.gap*2;
                         }
                     }
 
                     function init() {
                         game.start(400,200);
-                        player.render()
+                        pipe.reset();
                     }
 
                     function tick() {
                         game.clear();
-                        player.update();
-                        player.render();
+                        if (!player.dead) {
+                            player.update();
+                            pipe.update();
+                            player.render();
+                            pipe.render();
+                            game.ctx.font = "15px serif";
+                            game.ctx.fillStyle = "white";
+                            game.ctx.fillText(game.score.toString(),5,15);
+                        } else {
+                            game.ctx.font = "48px serif";
+                            game.ctx.fillStyle = "red";
+                            game.ctx.fillText("GAME OVER",50,50);
+                            game.ctx.fillText("Score: "+game.score.toString(),50,90);
+                        }
                     }
                 
-                    function key
+                    function press() {
+                        player.yvel = 3;
+                    }
+
+                    function reset() {
+                        pipe.reset()
+                        player.reset()
+                    }
                 </script>
                 <p>&nbsp;</p>
 
