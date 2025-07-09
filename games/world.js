@@ -18,7 +18,7 @@ const world = {
     }
 }
 
-const maze = new wLevel(20,20);
+const maze = new wLevel(50,50);
 
 function wLevel(width,height) {
     this.width = width;
@@ -33,11 +33,9 @@ function wLevel(width,height) {
                 this.set(x,y,"wall");
             }
         }
-        this.makeRoom(0,0,7,7,"start");
-        this.set(6,3,"door");
-        this.makeRoom(6,0,15,10,"start");
+        this.makeRoom(0,0,7,7,"start",0,0);
     }
-    this.makeRoom = function(x,y,w,h,type) {
+    this.makeRoom = function(x,y,w,h,type,dx,dy) {
         for (let mx = x+1; mx < x+w-1; mx++) {
             for (let my = y+1; my < y+h-1; my++) {
                 if (this.valid(mx,my)) {
@@ -47,7 +45,74 @@ function wLevel(width,height) {
         }
         if (type == "start") {
             this.set(x+Math.floor(w/2),y+Math.floor(h/2),"ladder");
+            this.set(x+w-1,y+Math.floor(w/2),"door");
+            this.makeRoom(x+w-1,y,7,7,"",x+w,y+Math.floor(w/2));
+        } else if (type == "library") {
+            for (let mx = x+1; mx < x+w-1; mx++) {
+                this.set(mx,y+1,"bookshelf");
+            }
+            let gap = 0;
+            for (let my = y+4; my < y+h-1; my+=3) {
+                if (Math.round(Math.random()*15) != 0 && my != dy) {
+                    gap = Math.round(Math.random()*(w-4))+1;
+                    for (let mx = x+1; mx < x+gap-1; mx++) {
+                        this.set(mx,my,"bookshelf");
+                    }
+                    for (let mx = x+gap+2; mx < x+w-1; mx++) {
+                        this.set(mx,my,"bookshelf");
+                    }
+                }
+            }
+            if (this.validRoom(x+gap-3,y+h-1,7,7)) {
+                this.makeRoom(x+gap-3,y+h-1,7,7);
+                this.set(x+gap,y+h-1,"door");
+            }
+        } else {
+            if (Math.round(Math.random()) == 0) {
+                let done = 0;
+                while (done<5) {
+                    const dir = Math.round(Math.random()*3);
+                    if (dir == 0 && this.validRoom(x,y-h+1,w,h)) {
+                        this.set(x+Math.floor(w/2),y,"door");
+                        this.makeRoom(x,y-h+1,w,h);
+                        return;
+                    }
+                    if (dir == 1 && this.validRoom(x,y+h-1,w,h)) {
+                        this.set(x+Math.floor(w/2),y+h-1,"door");
+                        this.makeRoom(x,y+h-1,w,h);
+                        return;
+                    }
+                    if (dir == 2 && this.validRoom(x+w-1,y,w,h)) {
+                        this.set(x+w-1,y+Math.floor(w/2),"door");
+                        this.makeRoom(x+w-1,y,w,h);
+                        return;
+                    }
+                    if (dir == 3 && this.validRoom(x-w+1,y,w,h)) {
+                        this.set(x,y+Math.floor(w/2),"door");
+                        this.makeRoom(x-w+1,y,w,h);
+                        return;
+                    }
+                    done += 1;
+                }
+            } else {
+                const wth = Math.round(Math.random()*5)+9;
+                const hgt = Math.round(Math.random()*5)+7;
+                if (this.validRoom(x+w-1,y,wth,hgt)) {
+                    this.set(x+w-1,y+Math.floor(w/2),"door");
+                    this.makeRoom(x+w-1,y,wth,hgt,"library",x+w,y+Math.floor(w/2));
+                }
+            }
         }
+    }
+    this.validRoom = function(x,y,w,h) {
+        for (let mx = x+1; mx < x+w-1; mx++) {
+            for (let my = y+1; my < y+h-1; my++) {
+                if (!this.valid(mx,my) || this.get(mx,my) != "wall") {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
     this.set = function(x,y,val) {
         this.map[x][y] = val;
@@ -85,6 +150,30 @@ function wLevel(width,height) {
                     } else if (tile == "door") {
                         world.ctx.fillStyle = "brown";
                         world.ctx.fillRect(sx,sy,tsize,tsize);
+                    } else if (tile == "bookshelf") {
+                        world.ctx.fillStyle = "brown";
+                        world.ctx.fillRect(sx,sy,tsize,tsize);
+                        const rsize = Math.floor(tsize/9);
+                        world.ctx.fillStyle = "black";
+                        world.ctx.fillRect(sx+rsize,sy+rsize,tsize-rsize*2,rsize*3);
+                        world.ctx.fillRect(sx+rsize,sy+tsize-rsize*4,tsize-rsize*2,rsize*3);
+                        world.ctx.fillStyle = "red";
+                        world.ctx.fillRect(sx+rsize,sy+rsize,rsize,rsize*3);
+                        world.ctx.fillStyle = "blue";
+                        world.ctx.fillRect(sx+rsize*2,sy+rsize,rsize,rsize*3);
+                        world.ctx.fillStyle = "green";
+                        world.ctx.fillRect(sx+rsize*4,sy+rsize,rsize,rsize*3);
+                        world.ctx.fillStyle = "purple";
+                        world.ctx.fillRect(sx+rsize*5,sy+rsize*3,rsize*3,rsize);
+                        world.ctx.fillRect(sx+rsize*2,sy+tsize-rsize*4,rsize,rsize*3);
+                        world.ctx.fillStyle = "blue";
+                        world.ctx.fillRect(sx+rsize*3,sy+tsize-rsize*4,rsize,rsize*3);
+                        world.ctx.fillStyle = "orange";
+                        world.ctx.fillRect(sx+rsize*4,sy+tsize-rsize*4,rsize,rsize*3);
+                        world.ctx.fillStyle = "white";
+                        world.ctx.fillRect(sx+rsize*7,sy+tsize-rsize*4,rsize,rsize*3);
+                        world.ctx.fillStyle = "red";
+                        world.ctx.fillRect(sx+rsize*8,sy+tsize-rsize*4,rsize,rsize*3);
                     }
                 }
             }
@@ -92,7 +181,7 @@ function wLevel(width,height) {
     }
 }
 
-wplayer = {
+const wplayer = {
     x: 0,
     y: 0,
     reset: function() {
@@ -101,22 +190,57 @@ wplayer = {
     }
 }
 
+const inputs = {
+    w: false,
+    s: false,
+    a: false,
+    d: false,
+    handle: function() {
+        if (this.w) {
+            wplayer.y -= 4;
+        }
+        if (this.s) {
+            wplayer.y += 4;
+        }
+        if (this.a) {
+            wplayer.x -= 4;
+        }
+        if (this.d) {
+            wplayer.x += 4;
+        }
+    }
+}
+
 function winit() {
     if (!world.init) {
         world.start(400,200);
         maze.gen();
-        document.addEventListener("keypress", function(event) {
+        document.addEventListener("keydown", function(event) {
             if (event.key == "w") {
-                wplayer.y -= 4;
+                inputs.w = true;
             }
             if (event.key == "s") {
-                wplayer.y += 4;
+                inputs.s = true;
             }
             if (event.key == "a") {
-                wplayer.x -= 4;
+                inputs.a = true;
             }
             if (event.key == "d") {
-                wplayer.x += 4;
+                inputs.d = true;
+            }
+        });
+        document.addEventListener("keyup", function(event) {
+            if (event.key == "w") {
+                inputs.w = false;
+            }
+            if (event.key == "s") {
+                inputs.s = false;
+            }
+            if (event.key == "a") {
+                inputs.a = false;
+            }
+            if (event.key == "d") {
+                inputs.d = false;
             }
         });
     }
@@ -125,6 +249,7 @@ function winit() {
 function wtick() {
     world.clear();
     maze.draw(wplayer.x,wplayer.y,40);
+    inputs.handle();
 }
 
 function wreset() {
@@ -133,8 +258,10 @@ function wreset() {
 }
 
 function wstop() {
-    document.getElementById("world").removeChild(world.canvas);
-    clearInterval(world.loop);
-    wreset();
-    world.init = false;
+    if (world.init) {
+        document.getElementById("world").removeChild(world.canvas);
+        clearInterval(world.loop);
+        wreset();
+        world.init = false;
+    }
 }

@@ -35,7 +35,7 @@ player = {
         game.ctx.fillStyle = "orange";
         game.ctx.fillRect(this.x+this.size,this.y+(this.size/2),this.bsize,this.bsize);
         game.ctx.fillStyle = "black";
-        game.ctx.fillRect(this.x+(this.size/2),this.y+(this.size/2),Math.round(this.bsize/2),Math.round(this.bsize/2));
+        game.ctx.fillRect(this.x+(this.size/2),this.y+(this.size/2),Math.round(this.size/4),Math.round(this.size/4));
     },
     update: function() {
         this.yvel -= 0.1;
@@ -116,8 +116,10 @@ function reset() {
 }
 
 function stop() {
-    document.getElementById("fb").removeChild(game.canvas);
-    clearInterval(game.loop);
-    reset();
-    game.init = false;
+    if (game.init) {
+        document.getElementById("fb").removeChild(game.canvas);
+        clearInterval(game.loop);
+        reset();
+        game.init = false;
+    }
 }
