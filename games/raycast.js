@@ -6,11 +6,11 @@ rc = {
             this.init = true;
             this.canvas.width = width;
             this.canvas.height = height;
-            this.canvas.style = "background: white; border: 1px outset white;";
+            this.canvas.style = "background: rgb(200,200,200); border: 1px outset white;";
             this.ctx = this.canvas.getContext("2d");
             const place = document.getElementById("ray");
             place.appendChild(this.canvas);
-            //this.loop = setInterval(stick,30);
+            this.loop = setInterval(rtick,50);
         }
     },
     clear: function() {
@@ -29,12 +29,13 @@ map = [
 ]
 
 camera = {
-    x: 2,
-    y: 2,
+    x: 3,
+    y: 3,
     r: 0,
-    init: function(fov, size) {
-        this.fov = fov
-        this.size = size
+    init: function(fov, size, speed) {
+        this.fov = fov;
+        this.size = size;
+        this.speed = speed;
     },
     render: function() {
         x = 0
@@ -43,7 +44,7 @@ camera = {
             const rayCY = Math.cos(radians(a))/this.size;
             let rayX = this.x;
             let rayY = this.y;
-            step = 0;
+            let step = 0;
             while (step < 100) {
                 step++;
                 rayX += rayCX;
@@ -53,11 +54,14 @@ camera = {
                 }
             }
             if (step < 100) {
-                rc.ctx.setStyle = "grey";
+                const l = 170*(1-step/100);
+                rc.ctx.fillStyle = "rgb("+l+","+l+","+l+")";
             } else {
-                rc.ctx.setStyle = "black";
+                rc.ctx.fillStyle = "black";
             }
-            
+            step *= Math.cos(radians(a-this.r));
+            const h = Math.floor((1-step/100)*rc.canvas.height);
+            rc.ctx.fillRect(x,Math.floor((rc.canvas.height-h)/2),1,h);
             x++;
         }
     }
@@ -67,15 +71,74 @@ function radians(a) {
     return a*(Math.PI/180);
 }
 
+const rinputs = {
+    w: false,
+    s: false,
+    a: false,
+    d: false,
+    handle: function() {
+        const cx = Math.sin(radians(camera.r))/camera.size*camera.speed;
+        const cy = Math.cos(radians(camera.r))/camera.size*camera.speed;
+        if (this.w) {
+            camera.x += cx;
+            camera.y += cy;
+        }
+        if (this.s) {
+            camera.x -= cx;
+            camera.y -= cy;
+        }
+        if (this.a) {
+            camera.r -= 2;
+        }
+        if (this.d) {
+            camera.r += 2;
+        }
+    }
+}
+
 function rinit() {
     rc.start(800,400);
-    camera.init(60,10)
+    camera.init(60,10,2);
+    document.addEventListener("keydown", function(event) {
+        if (event.key == "w") {
+            rinputs.w = true;
+        }
+        if (event.key == "s") {
+            rinputs.s = true;
+        }
+        if (event.key == "a") {
+            rinputs.a = true;
+        }
+        if (event.key == "d") {
+            rinputs.d = true;
+        }
+    });
+    document.addEventListener("keyup", function(event) {
+        if (event.key == "w") {
+            rinputs.w = false;
+        }
+        if (event.key == "s") {
+            rinputs.s = false;
+        }
+        if (event.key == "a") {
+            rinputs.a = false;
+        }
+        if (event.key == "d") {
+            rinputs.d = false;
+        }
+    });
 }
 
 function rstop() {
     if (rc.init) {
         document.getElementById("ray").removeChild(rc.canvas);
         rc.init = false;
-        //clearInterval(fss.loop);
+        clearInterval(rc.loop);
     }
+}
+
+function rtick() {
+    rc.clear();
+    camera.render();
+    rinputs.handle();
 }
