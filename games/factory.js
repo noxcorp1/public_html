@@ -12,6 +12,45 @@ const fac = {
             const place = document.getElementById("factory");
             place.appendChild(this.canvas);
             this.loop = setInterval(fac.tick,50);
+            document.addEventListener("keydown", function(event) {
+                if (event.key == "w") {
+                    finput.w = true;
+                }
+                if (event.key == "s") {
+                    finput.s = true;
+                }
+                if (event.key == "a") {
+                    finput.a = true;
+                }
+                if (event.key == "d") {
+                    finput.d = true;
+                }
+            });
+            document.addEventListener("keyup", function(event) {
+                if (event.key == "w") {
+                    finput.w = false;
+                }
+                if (event.key == "s") {
+                    finput.s = false;
+                }
+                if (event.key == "a") {
+                    finput.a = false;
+                }
+                if (event.key == "d") {
+                    finput.d = false;
+                }
+            });
+            document.addEventListener("mousedown", function(event) {
+                finput.click = true;
+            });
+            document.addEventListener("mouseup", function(event) {
+                finput.click = false;
+            });
+            document.addEventListener("mousemove", function(event) {
+                const rect = fac.canvas.getBoundingClientRect();
+                finput.mx = Math.floor(event.clientX-rect.x);
+                finput.my = Math.floor(event.clientY-rect.y);
+            });
         }
     },
     stop: function() {
@@ -29,7 +68,9 @@ const fac = {
     },
     tick: function() {
         fac.clear();
-        fgrid.render(0,0);
+        fgrid.render(fplayer.x,fplayer.y);
+        fgrid.update();
+        finput.handle();
     }
 }
 
@@ -38,23 +79,29 @@ const fgrid = {
         this.width = width;
         this.height = height;
         this.ground = [];
+        this.machines = [];
         this.tsize = tsize;
         for (let x = 0; x < width; x++) {
             this.ground.push(new Array());
+            this.machines.push(new Array());
             for (let y = 0; y < height; y++) {
                 this.ground[x][y] = "grass";
+                this.machines[x][y] = null;
             }
         }
         this.genPatch(4,4,"coal",3);
         this.genPatch(8,7,"iron",2);
         this.genPatch(15,6,"copper",2);
+        new fItem(2,2,"coal_ore");
     },
     reset: function() {
         this.ground = [];
         for (let x = 0; x < this.width; x++) {
             this.ground.push(new Array());
+            this.machines.push(new Array());
             for (let y = 0; y < this.height; y++) {
                 this.ground[x][y] = "grass";
+                this.machines[x][y] = null;
             }
         }
         this.genPatch(3,3,"coal",3);
@@ -79,6 +126,12 @@ const fgrid = {
     setg: function(x,y,val) {
         this.ground[x][y] = val;
     },
+    getm: function(x,y) {
+        return this.machines[x][y];
+    },
+    setm: function(x,y,val) {
+        this.machines[x][y] = val;
+    },
     valCord: function(x,y) {
         return (x > -1 && x < this.width && y > -1 && y < this.height);
     },
@@ -87,70 +140,194 @@ const fgrid = {
             for(let y = -1; y < Math.ceil(fac.canvas.width/this.tsize)+1; y++) {
                 const tx = x+Math.floor(offx/this.tsize);
                 const ty = y+Math.floor(offy/this.tsize);
-                const sx = x*this.tsize-offx;
-                const sy = y*this.tsize-offy;
+                const sx = tx*this.tsize-offx;
+                const sy = ty*this.tsize-offy;
                 if (this.valCord(tx,ty)) {
-                    const tile = this.getg(x,y);
+                    const tile = this.getg(tx,ty);
                     if (tile == "grass") {
                         fac.ctx.fillStyle = "green";
                     } else if (tile == "iron") {
-                        fac.ctx.fillStyle = "white";
+                        fac.ctx.fillStyle = colors.iron;
                     } else if (tile == "copper") {
                         fac.ctx.fillStyle = "orange";
                     } else if (tile == "coal") {
                         fac.ctx.fillStyle = "rgb(20,20,20)";
                     }
+                    fac.ctx.fillRect(sx,sy,this.tsize,this.tsize);
+                    const mach = this.getm(tx,ty);
+                    if (mach instanceof fMachine) {
+                        fac.ctx.translate(sx,sy);
+                        fac.ctx.scale(this.tsize/10,this.tsize/10);
+                        mach.render();
+                        fac.ctx.resetTransform();
+                    }
                     fac.ctx.strokeStyle = "black";
                     fac.ctx.lineWidth = 2;
-                    fac.ctx.fillRect(sx,sy,this.tsize,this.tsize);
                     fac.ctx.strokeRect(sx,sy,this.tsize,this.tsize);
+                    for (let i = 0; i < fitems.length; i++) {
+                        fitems[i].render(offx,offy);
+                    }
                 }
             }
+        }
+    },
+    update: function() {
+        for (let x = 0; x < this.width; x++) {
+            for (let y = 0; y < this.height; y++) {
+                mach = this.getm(x,y);
+                if (mach instanceof fMachine) {
+                    mach.update();   
+                }
+            }
+        }
+        for (let i = 0; i < fitems.length; i++) {
+            fitems[i].update();
         }
     }
 }
 
-fitems = [];
+const colors = {
+    iron: "rgb(227, 190, 175)"
+}
 
-class fBelt {
+const fplayer = {
+    x: 0,
+    y: 0
+}
+
+const finput = {
+    w: false,
+    s: false,
+    a: false,
+    d: false,
+    click: false,
+    mx: 0,
+    my: 0,
+    handle: function() {
+        if (this.w) {
+            fplayer.y -= 4;
+        }
+        if (this.s) {
+            fplayer.y += 4;
+        }
+        if (this.a) {
+            fplayer.x -= 4;
+        }
+        if (this.d) {
+            fplayer.x += 4;
+        }
+        const tx = Math.floor(this.mx/fgrid.tsize);
+        const ty = Math.floor(this.my/fgrid.tsize);
+        if (fsel == "belt") {
+            if (this.click) {
+                fgrid.setm(tx,ty,new fBelt(tx,ty,0));
+            }
+            fac.ctx.translate(tx*fgrid.tsize-fplayer.x,ty*fgrid.tsize-fplayer.y);
+            fac.ctx.scale(fgrid.tsize/10,fgrid.tsize/10);
+            new fBelt(0,0,0).render();
+            fac.ctx.resetTransform();
+        }
+    }
+}
+
+let fsel = "belt";
+
+let fitems = [];
+
+class fMachine {
     constructor(x,y,dir) {
         this.x = x;
         this.y = y;
-        this.dir = dir
+        this.dir = dir;
+    }
+    render() {
+
+    }
+    update() {
+
+    }
+}
+
+class fBelt extends fMachine {
+    constructor(x,y,dir) {
+        super(x,y,dir);
+    }
+
+    render() {
+        fac.ctx.fillStyle = "rgb(70,70,70)";
+        fac.ctx.fillRect(0,0,10,10);
+        fac.ctx.fillStyle = "red";
+        if (this.dir == 0) {
+            fac.ctx.beginPath();
+            fac.ctx.moveTo(5,6);
+            fac.ctx.lineTo(7,4);
+            fac.ctx.lineTo(3,4);
+            fac.ctx.fill();
+            fac.ctx.fillStyle = "grey";
+            fac.ctx.fillRect(0,0,2,10);
+            fac.ctx.fillRect(8,0,2,10)
+        } else if (this.dir == 1) {
+            fac.ctx.beginPath();
+            fac.ctx.moveTo(5,4);
+            fac.ctx.lineTo(7,6);
+            fac.ctx.lineTo(3,6);
+            fac.ctx.fill();
+            fac.ctx.fillStyle = "grey";
+            fac.ctx.fillRect(0,0,2,10);
+            fac.ctx.fillRect(8,0,2,10)
+        } else if (this.dir == 2) {
+            fac.ctx.beginPath();
+            fac.ctx.moveTo(6,5);
+            fac.ctx.lineTo(4,7);
+            fac.ctx.lineTo(4,3);
+            fac.ctx.fill();
+            fac.ctx.fillStyle = "grey";
+            fac.ctx.fillRect(0,0,10,2);
+            fac.ctx.fillRect(0,8,10,2)
+        } else if (this.dir == 3) {
+            fac.ctx.beginPath();
+            fac.ctx.moveTo(4,5);
+            fac.ctx.lineTo(6,7);
+            fac.ctx.lineTo(6,3);
+            fac.ctx.fill();
+            fac.ctx.fillStyle = "grey";
+            fac.ctx.fillRect(0,0,10,2);
+            fac.ctx.fillRect(0,8,10,2)
+        }
     }
 }
 
 class fItem {
-    constructor(tx,ty,item) {
-        this.x = fgrid.tsize*tx;
-        this.y = fgrid.tsize*ty;
-        this.tx = x;
-        this.ty = y;
+    constructor(x,y,item) {
+        this.x = fgrid.tsize*x;
+        this.y = fgrid.tsize*y;
+        this.tx = this.x;
+        this.ty = this.y;
         this.item = item;
         fitems.push(this);
     }
-    render() {
-        if (this.item == "coal") {
+    render(offx,offy) {
+        if (this.item == "coal_ore") {
             fac.ctx.beginPath();
-            fac.ctx.arc(0,0,this.tsize*0.8,0,2*Math.PI);
+            fac.ctx.arc(this.x+fgrid.tsize/2-offx,this.y+fgrid.tsize/2-offy,fgrid.tsize/2*0.6,0,2*Math.PI);
             fac.ctx.fillStyle = "rgb(20,20,20)";
             fac.ctx.strokeStyle = "black";
             fac.ctx.lineWidth = 2;
             fac.ctx.fill();
             fac.ctx.stroke();
         }
-        if (this.item == "iron") {
+        if (this.item == "iron_ore") {
             fac.ctx.beginPath();
-            fac.ctx.arc(0,0,this.tsize*0.8,0,2*Math.PI);
-            fac.ctx.fillStyle = "white";
+            fac.ctx.arc(this.x+fgrid.tsize/2-offx,this.y+fgrid.tsize/2-offy,fgrid.tsize/2*0.6,0,2*Math.PI);
+            fac.ctx.fillStyle = colors.iron;
             fac.ctx.strokeStyle = "black";
             fac.ctx.lineWidth = 2;
             fac.ctx.fill();
             fac.ctx.stroke();
         }
-        if (this.item == "copper") {
+        if (this.item == "copper_ore") {
             fac.ctx.beginPath();
-            fac.ctx.arc(0,0,this.tsize*0.8,0,2*Math.PI);
+            fac.ctx.arc(this.x+fgrid.tsize/2-offx,this.y+fgrid.tsize/2-offy,fgrid.tsize/2*0.6,0,2*Math.PI);
             fac.ctx.fillStyle = "orange";
             fac.ctx.strokeStyle = "black";
             fac.ctx.lineWidth = 2;
@@ -159,16 +336,35 @@ class fItem {
         }
     }
     update() {
-        if (x == tx && y == ty) {
-
+        if (this.x == this.tx && this.y == this.ty) {
+            if (fgrid.getm(Math.floor(this.x/fgrid.tsize),Math.floor(this.y/fgrid.tsize)) instanceof fBelt) {
+                const belt = fgrid.getm(Math.floor(this.x/fgrid.tsize),Math.floor(this.y/fgrid.tsize))
+                const otx = this.tx;
+                const oty = this.ty;
+                if (belt.dir == 0) {
+                    this.ty += fgrid.tsize;
+                } else if (belt.dir == 1) {
+                    this.ty -= fgrid.tsize;
+                } else if (belt.dir == 2) {
+                    this.tx += fgrid.tsize;
+                } else if (belt.dir == 3) {
+                    this.tx -= fgrid.tsize;
+                }
+                for (let i = 0; i < fitems.length; i++) {
+                    if (fitems[i] != this && this.tx == fitems[i].tx && this.ty == fitems[i].ty) {
+                        this.tx = otx;
+                        this.ty = oty;
+                    }
+                }
+            }
         } else {
-            if (tx > x) {
+            if (this.tx > this.x) {
                 this.x += 1;
-            } else if (tx < x) {
+            } else if (this.tx < this.x) {
                 this.x -= 1;
-            } else if (ty > y) {
+            } else if (this.ty > this.y) {
                 this.y += 1;
-            } else if (ty < y) {
+            } else if (this.ty < this.y) {
                 this.y -= 1;
             }
         }
