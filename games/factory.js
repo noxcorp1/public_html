@@ -3,6 +3,7 @@ const fac = {
     init: false,
     start: function() {
         if (!this.init) {
+            fitems = [];
             fgrid.init(50,50,40);
             this.init = true;
             this.canvas.width = 800;
@@ -24,6 +25,22 @@ const fac = {
                 }
                 if (event.key == "d") {
                     finput.d = true;
+                }
+                if (event.key == "r") {
+                    fdir += 1;
+                    fdir %= 4;
+                }
+                if (event.key == "1") {
+                    fsel = "belt";
+                }
+                if (event.key == "2") {
+                    fsel = "miner";
+                }
+                if (event.key == "3") {
+                    fsel = "smelter";
+                }
+                if (event.key == "4") {
+                    fsel = "inserter";
                 }
             });
             document.addEventListener("keyup", function(event) {
@@ -61,6 +78,7 @@ const fac = {
         }
     },
     reset: function() {
+        fitems = [];
         fgrid.reset();
     },
     clear: function() {
@@ -92,7 +110,6 @@ const fgrid = {
         this.genPatch(4,4,"coal",3);
         this.genPatch(8,7,"iron",2);
         this.genPatch(15,6,"copper",2);
-        new fItem(2,2,"coal_ore");
     },
     reset: function() {
         this.ground = [];
@@ -216,21 +233,47 @@ const finput = {
         if (this.d) {
             fplayer.x += 4;
         }
-        const tx = Math.floor(this.mx/fgrid.tsize);
-        const ty = Math.floor(this.my/fgrid.tsize);
+        const tx = Math.floor((this.mx+fplayer.x)/fgrid.tsize);
+        const ty = Math.floor((this.my+fplayer.y)/fgrid.tsize);
         if (fsel == "belt") {
             if (this.click) {
-                fgrid.setm(tx,ty,new fBelt(tx,ty,0));
+                fgrid.setm(tx,ty,new fBelt(tx,ty,fdir));
             }
             fac.ctx.translate(tx*fgrid.tsize-fplayer.x,ty*fgrid.tsize-fplayer.y);
             fac.ctx.scale(fgrid.tsize/10,fgrid.tsize/10);
-            new fBelt(0,0,0).render();
+            new fBelt(0,0,fdir).render();
+            fac.ctx.resetTransform();
+        } else if (fsel == "miner") {
+            if (this.click) {
+                fgrid.setm(tx,ty,new fMiner(tx,ty,fdir));
+            }
+            fac.ctx.translate(tx*fgrid.tsize-fplayer.x,ty*fgrid.tsize-fplayer.y);
+            fac.ctx.scale(fgrid.tsize/10,fgrid.tsize/10);
+            new fMiner(0,0,fdir).render();
+            fac.ctx.resetTransform();
+        } else if (fsel == "smelter") {
+            if (this.click) {
+                fgrid.setm(tx,ty,new fSmelter(tx,ty,fdir));
+            }
+            fac.ctx.translate(tx*fgrid.tsize-fplayer.x,ty*fgrid.tsize-fplayer.y);
+            fac.ctx.scale(fgrid.tsize/10,fgrid.tsize/10);
+            new fSmelter(0,0,fdir).render();
+            fac.ctx.resetTransform();
+        } else if (fsel == "inserter") {
+            if (this.click) {
+                fgrid.setm(tx,ty,new fInserter(tx,ty,fdir));
+            }
+            fac.ctx.translate(tx*fgrid.tsize-fplayer.x,ty*fgrid.tsize-fplayer.y);
+            fac.ctx.scale(fgrid.tsize/10,fgrid.tsize/10);
+            new fInserter(0,0,fdir).render();
             fac.ctx.resetTransform();
         }
+        
     }
 }
 
 let fsel = "belt";
+let fdir = 0
 
 let fitems = [];
 
@@ -249,10 +292,6 @@ class fMachine {
 }
 
 class fBelt extends fMachine {
-    constructor(x,y,dir) {
-        super(x,y,dir);
-    }
-
     render() {
         fac.ctx.fillStyle = "rgb(70,70,70)";
         fac.ctx.fillRect(0,0,10,10);
@@ -297,6 +336,229 @@ class fBelt extends fMachine {
     }
 }
 
+class fMiner extends fMachine {
+    constructor(x,y,dir) {
+        super(x,y,dir);
+        this.tick = 0;
+    }
+    render() {
+        fac.ctx.fillStyle = "grey";
+        fac.ctx.fillRect(0,0,10,10);
+        fac.ctx.strokeStyle = "black";
+        fac.ctx.fillStyle = "rgb(60,60,60)";
+        fac.ctx.lineWidth = 0.5;
+        fac.ctx.beginPath();
+        fac.ctx.arc(5,5,3,0,2*Math.PI);
+        fac.ctx.fill();
+        fac.ctx.stroke();
+        fac.ctx.beginPath();
+        fac.ctx.arc(5,5,2,0,2*Math.PI);
+        fac.ctx.stroke();
+        fac.ctx.beginPath();
+        fac.ctx.arc(5,5,1,0,2*Math.PI);
+        fac.ctx.stroke();
+        fac.ctx.fillStyle = "red";
+        if (this.dir == 0) {
+            fac.ctx.fillRect(3,9,4,1);
+        } else if (this.dir == 1) {
+            fac.ctx.fillRect(3,0,4,1);
+        } else if (this.dir == 2) {
+            fac.ctx.fillRect(9,3,1,4);
+        } else if (this.dir == 3) {
+            fac.ctx.fillRect(0,3,1,4);
+        }
+    }
+    update() { //BUG: should probably check if item is on belt currently
+        this.tick += 1;
+        if (this.tick > 80) {
+            let tx = this.x*fgrid.tsize;
+            let ty = this.y*fgrid.tsize;
+            switch (this.dir) {
+                case 0:
+                    ty += fgrid.tsize;
+                    break;
+                case 1:
+                    ty -= fgrid.tsize;
+                    break;
+                case 2:
+                    tx += fgrid.tsize;
+                    break;
+                case 3:
+                    tx -= fgrid.tsize;
+                    break;
+            }
+            for (let i = 0; i < fitems.length; i++) {
+                if (fitems[i].tx == tx && fitems[i].ty == ty) {
+                    return;
+                }
+            }
+            this.tick = 0;
+            const tile = fgrid.getg(this.x,this.y);
+            if (tile != "grass") {
+                new fItem(tx/fgrid.tsize,ty/fgrid.tsize,tile+"_ore");
+            }
+        }
+    }
+}
+
+class fInserter extends fMachine {
+    render() {
+        fac.ctx.fillStyle = "grey";
+        fac.ctx.fillRect(0,0,10,10);
+        fac.ctx.fillStyle = "black";
+        if (this.dir == 0) {
+            fac.ctx.fillRect(3,0,4,3);
+        } else if (this.dir == 1) {
+            fac.ctx.fillRect(3,7,4,3);
+        } else if (this.dir == 2) {
+            fac.ctx.fillRect(0,3,3,4);
+        } else if (this.dir == 3) {
+            fac.ctx.fillRect(7,3,3,4);
+        }
+        fac.ctx.fillStyle = "red";
+        if (this.dir == 0) {
+            fac.ctx.beginPath();
+            fac.ctx.moveTo(5,6);
+            fac.ctx.lineTo(7,4);
+            fac.ctx.lineTo(3,4);
+            fac.ctx.fill();
+            fac.ctx.fillStyle = "grey";
+            fac.ctx.fillRect(0,0,2,10);
+            fac.ctx.fillRect(8,0,2,10)
+        } else if (this.dir == 1) {
+            fac.ctx.beginPath();
+            fac.ctx.moveTo(5,4);
+            fac.ctx.lineTo(7,6);
+            fac.ctx.lineTo(3,6);
+            fac.ctx.fill();
+            fac.ctx.fillStyle = "grey";
+            fac.ctx.fillRect(0,0,2,10);
+            fac.ctx.fillRect(8,0,2,10)
+        } else if (this.dir == 2) {
+            fac.ctx.beginPath();
+            fac.ctx.moveTo(6,5);
+            fac.ctx.lineTo(4,7);
+            fac.ctx.lineTo(4,3);
+            fac.ctx.fill();
+            fac.ctx.fillStyle = "grey";
+            fac.ctx.fillRect(0,0,10,2);
+            fac.ctx.fillRect(0,8,10,2)
+        } else if (this.dir == 3) {
+            fac.ctx.beginPath();
+            fac.ctx.moveTo(4,5);
+            fac.ctx.lineTo(6,7);
+            fac.ctx.lineTo(6,3);
+            fac.ctx.fill();
+            fac.ctx.fillStyle = "grey";
+            fac.ctx.fillRect(0,0,10,2);
+            fac.ctx.fillRect(0,8,10,2)
+        }
+    }
+    update() {
+        let ix = this.x*fgrid.tsize;
+        let iy = this.y*fgrid.tsize;
+        let ox = this.x;
+        let oy = this.y;
+        switch (this.dir) {
+            case 0:
+                iy -= fgrid.tsize;
+                oy += 1;
+                break;
+            case 1:
+                iy += fgrid.tsize;
+                oy -= 1;
+                break;
+            case 2:
+                ix -= fgrid.tsize;
+                ox += 1;
+                break;
+            case 3:
+                ix += fgrid.tsize;
+                ox -= 1;
+                break;
+        }
+        for (let i = 0; i < fitems.length; i++) {
+            if (fitems[i].x == ix && fitems[i].y == iy) {
+                const mach = fgrid.getm(ox,oy);
+                if (mach instanceof fSmelter) {
+                    if ((fitems[i].item == "copper_ore" || fitems[i].item == "iron_ore") && mach.input == null) {
+                        mach.input = fitems.splice(i,1)[0];
+                    } else if (fitems[i].item == "coal_ore" && mach.fuel <= 5) {
+                        mach.fuel += 1;
+                        fitems.splice(i,1)[0];
+                    }
+                }
+            }
+        }
+    }
+}
+
+class fSmelter extends fMachine {
+    constructor(x,y,dir) {
+        super(x,y,dir);
+        this.tick = 0;
+        this.input = null;
+        this.fuel = 0;
+    }
+    render() {
+        fac.ctx.fillStyle = "grey";
+        fac.ctx.fillRect(0,0,10,10);
+        fac.ctx.fillStyle = "red";
+        fac.ctx.fillRect(2,2,6,2);
+        fac.ctx.fillStyle = "orange";
+        fac.ctx.fillRect(2,4,6,2);
+        fac.ctx.fillStyle = "yellow";
+        fac.ctx.fillRect(2,6,6,2);
+        fac.ctx.fillStyle = "red";
+        if (this.dir == 0) {
+            fac.ctx.fillRect(3,9,4,1);
+        } else if (this.dir == 1) {
+            fac.ctx.fillRect(3,0,4,1);
+        } else if (this.dir == 2) {
+            fac.ctx.fillRect(9,3,1,4);
+        } else if (this.dir == 3) {
+            fac.ctx.fillRect(0,3,1,4);
+        }
+    }
+    update() {
+        this.tick += 1;
+        if (this.input == null || this.fuel == 0) {
+            this.tick = 0;
+        }
+        if (this.tick > 40) {
+            let tx = this.x*fgrid.tsize;
+            let ty = this.y*fgrid.tsize;
+            switch (this.dir) {
+                case 0:
+                    ty += fgrid.tsize;
+                    break;
+                case 1:
+                    ty -= fgrid.tsize;
+                    break;
+                case 2:
+                    tx += fgrid.tsize;
+                    break;
+                case 3:
+                    tx -= fgrid.tsize;
+                    break;
+            }
+            for (let i = 0; i < fitems.length; i++) {
+                if (fitems[i].tx == tx && fitems[i].ty == ty) {
+                    return;
+                }
+            }
+            this.tick = 0;
+            if (this.input.item == "iron_ore") {
+                new fItem(tx/fgrid.tsize,ty/fgrid.tsize,"iron_plate");
+            } else if (this.input.item == "copper_ore") {
+                new fItem(tx/fgrid.tsize,ty/fgrid.tsize,"copper_plate");
+            }
+            this.input = null;
+            this.fuel -= 1;
+        }
+    }
+}
+
 class fItem {
     constructor(x,y,item) {
         this.x = fgrid.tsize*x;
@@ -315,8 +577,7 @@ class fItem {
             fac.ctx.lineWidth = 2;
             fac.ctx.fill();
             fac.ctx.stroke();
-        }
-        if (this.item == "iron_ore") {
+        } else if (this.item == "iron_ore") {
             fac.ctx.beginPath();
             fac.ctx.arc(this.x+fgrid.tsize/2-offx,this.y+fgrid.tsize/2-offy,fgrid.tsize/2*0.6,0,2*Math.PI);
             fac.ctx.fillStyle = colors.iron;
@@ -324,8 +585,7 @@ class fItem {
             fac.ctx.lineWidth = 2;
             fac.ctx.fill();
             fac.ctx.stroke();
-        }
-        if (this.item == "copper_ore") {
+        } else if (this.item == "copper_ore") {
             fac.ctx.beginPath();
             fac.ctx.arc(this.x+fgrid.tsize/2-offx,this.y+fgrid.tsize/2-offy,fgrid.tsize/2*0.6,0,2*Math.PI);
             fac.ctx.fillStyle = "orange";
@@ -333,6 +593,18 @@ class fItem {
             fac.ctx.lineWidth = 2;
             fac.ctx.fill();
             fac.ctx.stroke();
+        } else if (this.item == "iron_plate") {
+            fac.ctx.fillStyle = "white";
+            fac.ctx.strokeStyle = "black";
+            fac.ctx.lineWidth = 2;
+            fac.ctx.fillRect(this.x+fgrid.tsize*0.2,this.y+fgrid.tsize*0.2,fgrid.tsize*0.6,fgrid.tsize*0.6);
+            fac.ctx.strokeRect(this.x+fgrid.tsize*0.2,this.y+fgrid.tsize*0.2,fgrid.tsize*0.6,fgrid.tsize*0.6);
+        } else if (this.item == "copper_plate") {
+            fac.ctx.fillStyle = "orange";
+            fac.ctx.strokeStyle = "black";
+            fac.ctx.lineWidth = 2;
+            fac.ctx.fillRect(this.x+fgrid.tsize*0.2,this.y+fgrid.tsize*0.2,fgrid.tsize*0.6,fgrid.tsize*0.6);
+            fac.ctx.strokeRect(this.x+fgrid.tsize*0.2,this.y+fgrid.tsize*0.2,fgrid.tsize*0.6,fgrid.tsize*0.6);;
         }
     }
     update() {
@@ -350,22 +622,28 @@ class fItem {
                 } else if (belt.dir == 3) {
                     this.tx -= fgrid.tsize;
                 }
+                if (!(fgrid.getm(this.tx/fgrid.tsize,this.ty/fgrid.tsize) instanceof fBelt)) {
+                    this.tx = otx;
+                    this.ty = oty;
+                    return
+                }
                 for (let i = 0; i < fitems.length; i++) {
                     if (fitems[i] != this && this.tx == fitems[i].tx && this.ty == fitems[i].ty) {
                         this.tx = otx;
                         this.ty = oty;
+                        return
                     }
                 }
             }
         } else {
             if (this.tx > this.x) {
-                this.x += 1;
+                this.x += 2;
             } else if (this.tx < this.x) {
-                this.x -= 1;
+                this.x -= 2;
             } else if (this.ty > this.y) {
-                this.y += 1;
+                this.y += 2;
             } else if (this.ty < this.y) {
-                this.y -= 1;
+                this.y -= 2;
             }
         }
     }
