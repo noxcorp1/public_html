@@ -19,18 +19,45 @@ rc = {
 }
 
 map = [
-    [1,1,1,1,1,1,1],
-    [1,0,0,0,0,0,1],
-    [1,0,0,0,0,0,1],
-    [1,0,0,0,0,0,1],
-    [1,0,0,0,0,0,1],
-    [1,0,0,0,0,0,1],
-    [1,1,1,1,1,1,1]
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,1,0,0,0,0,0,0,0,1,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,1,0,0,0,0,0,0,0,1,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 ]
 
+swall = [
+    ["grey","grey","grey","grey","dgrey","grey","grey","grey","grey"],
+    ["grey","grey","grey","grey","dgrey","grey","grey","grey","grey"],
+    ["grey","grey","grey","grey","dgrey","grey","grey","grey","grey"],
+    ["grey","grey","grey","grey","dgrey","grey","grey","grey","grey"],
+    ["dgrey","dgrey","dgrey","dgrey","dgrey","dgrey","dgrey","dgrey","dgrey"],
+    ["grey","grey","grey","grey","grey","grey","grey","grey","dgrey"],
+    ["grey","grey","grey","grey","grey","grey","grey","grey","dgrey"],
+    ["grey","grey","grey","grey","grey","grey","grey","grey","dgrey"],
+    ["grey","grey","grey","grey","grey","grey","grey","grey","dgrey"]
+]
+
+rcolors = new Map([
+    ["grey",[170,170,170]],
+    ["dgrey",[100,100,100]],
+    ["black",[0,0,0]]
+])
+
 camera = {
-    x: 3,
-    y: 3,
+    x: 7,
+    y: 7,
     r: 0,
     init: function(fov, size, speed) {
         this.fov = fov;
@@ -54,14 +81,27 @@ camera = {
                 }
             }
             if (step < 100) {
-                const l = 170*(1-step/100);
-                rc.ctx.fillStyle = "rgb("+l+","+l+","+l+")";
+                //const l = 170*(1-step/100);
+                //rc.ctx.fillStyle = "rgb("+l+","+l+","+l+")";
+                step *= Math.cos(radians(a-this.r));
+                const h = this.size/step*700;
+                const tx = (Math.floor(rayX*9)+Math.floor(rayY*9))%9;
+                const ph = h/9;
+                for (let ty = 0; ty < 9; ty++) {
+                    const l = (1-step/100);
+                    const r = rcolors.get(swall[ty][tx])[0]*l;
+                    const g = rcolors.get(swall[ty][tx])[1]*l;
+                    const b = rcolors.get(swall[ty][tx])[2]*l;
+                    rc.ctx.fillStyle = "rgb("+r+","+g+","+b+")";
+                    const y = Math.floor((rc.canvas.height-h)/2)+ty*ph;
+                    rc.ctx.fillRect(x,y,1,ph+1);
+                }
             } else {
                 rc.ctx.fillStyle = "black";
+                step *= Math.cos(radians(a-this.r));
+                const h = this.size/step*700;
+                rc.ctx.fillRect(x,Math.floor((rc.canvas.height-h)/2),1,h);
             }
-            step *= Math.cos(radians(a-this.r));
-            const h = Math.floor((1-step/100)*rc.canvas.height);
-            rc.ctx.fillRect(x,Math.floor((rc.canvas.height-h)/2),1,h);
             x++;
         }
     }
@@ -76,6 +116,8 @@ const rinputs = {
     s: false,
     a: false,
     d: false,
+    la: false,
+    ra: false,
     handle: function() {
         const cx = Math.sin(radians(camera.r))/camera.size*camera.speed;
         const cy = Math.cos(radians(camera.r))/camera.size*camera.speed;
@@ -87,10 +129,10 @@ const rinputs = {
             camera.x -= cx;
             camera.y -= cy;
         }
-        if (this.a) {
+        if (this.la) {
             camera.r -= 2;
         }
-        if (this.d) {
+        if (this.ra) {
             camera.r += 2;
         }
     }
@@ -112,6 +154,12 @@ function rinit() {
         if (event.key == "d") {
             rinputs.d = true;
         }
+        if (event.code == "leftArrow") {
+            rinputs.la = true;
+        }
+        if (event.code == "rightArrow") {
+            rinputs.ra = true;
+        }
     });
     document.addEventListener("keyup", function(event) {
         if (event.key == "w") {
@@ -125,6 +173,12 @@ function rinit() {
         }
         if (event.key == "d") {
             rinputs.d = false;
+        }
+        if (event.code == "leftArrow") {
+            rinputs.la = false;
+        }
+        if (event.code == "rightArrow") {
+            rinputs.ra = false;
         }
     });
 }

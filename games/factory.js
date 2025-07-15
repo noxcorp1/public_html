@@ -30,6 +30,9 @@ const fac = {
                     fdir += 1;
                     fdir %= 4;
                 }
+                if (event.key == "q") {
+                    fsel = "select";
+                }
             });
             document.addEventListener("keyup", function (event) {
                 if (event.key == "w") {
@@ -68,6 +71,7 @@ const fac = {
     reset: function () {
         fitems = [];
         fgrid.reset();
+        fui = [];
     },
     clear: function () {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -278,11 +282,16 @@ const finput = {
             fac.ctx.scale(fgrid.tsize / 10, fgrid.tsize / 10);
             new fCrafter(0, 0, fdir).render();
             fac.ctx.resetTransform();
+        } else if (fsel == "select") {
+            if (this.click && fgrid.getm(tx,ty) instanceof fCrafter) {
+                new fRecelect(tx*fgrid.tsize,ty*fgrid.tsize,fgrid.getm(tx,ty));
+                this.click = false;
+            }
         }
     }
 }
 
-let fsel = "belt";
+let fsel = "select";
 let fdir = 0
 
 let fitems = [];
@@ -497,6 +506,12 @@ class fInserter extends fMachine {
                         mach.fuel += 1;
                         fitems.splice(i, 1)[0];
                     }
+                } else if (mach instanceof fCrafter) {
+                    if (mach.in1 == null) {
+                        mach.in1 = fitems.splice(i, 1)[0];
+                    } else if (mach.in2 == null && mach.in1.item != fitems[i].item) {
+                        mach.in2 = fitems.splice(i, 1)[0];
+                    }
                 }
             }
         }
@@ -598,6 +613,46 @@ class fCrafter extends fMachine {
             fac.ctx.fillRect(0, 3, 1, 4);
         }
     }
+    update() {
+        this.tick += 1;
+        if (this.recipe == "none" || this.in1 == null) {
+            this.tick = 0;
+        }
+        if (this.tick > 40) {
+            if (this.recipe == "copper_wire" && !(this.in1.item == "copper_plate" && this.in2 == null)) {
+                console.log(this.in1);
+                console.log(this.in2);
+                return;
+            } else if (this.recipe == "circuit" && !((this.in1.item == "iron_plate" && this.in2.item == "copper_wire")||(this.in1.item == "copper_wire" && this.in2.item == "iron_plate"))) {
+                return;
+            }
+            let tx = this.x * fgrid.tsize;
+            let ty = this.y * fgrid.tsize;
+            switch (this.dir) {
+                case 0:
+                    ty += fgrid.tsize;
+                    break;
+                case 1:
+                    ty -= fgrid.tsize;
+                    break;
+                case 2:
+                    tx += fgrid.tsize;
+                    break;
+                case 3:
+                    tx -= fgrid.tsize;
+                    break;
+            }
+            for (let i = 0; i < fitems.length; i++) {
+                if (fitems[i].tx == tx && fitems[i].ty == ty) {
+                    return;
+                }
+            }
+            new fItem(tx / fgrid.tsize, ty / fgrid.tsize, this.recipe);
+            this.tick = 0;
+            this.in1 = null;
+            this.in2 = null;
+        }
+    }
 }
 
 class fItem {
@@ -638,14 +693,14 @@ class fItem {
             fac.ctx.fillStyle = "white";
             fac.ctx.strokeStyle = "black";
             fac.ctx.lineWidth = 2;
-            fac.ctx.fillRect(this.x + fgrid.tsize * 0.2, this.y + fgrid.tsize * 0.2, fgrid.tsize * 0.6, fgrid.tsize * 0.6);
-            fac.ctx.strokeRect(this.x + fgrid.tsize * 0.2, this.y + fgrid.tsize * 0.2, fgrid.tsize * 0.6, fgrid.tsize * 0.6);
+            fac.ctx.fillRect(this.x + fgrid.tsize * 0.2 - offx, this.y + fgrid.tsize * 0.2 - offy, fgrid.tsize * 0.6, fgrid.tsize * 0.6);
+            fac.ctx.strokeRect(this.x + fgrid.tsize * 0.2 - offx, this.y + fgrid.tsize * 0.2 - offy, fgrid.tsize * 0.6, fgrid.tsize * 0.6);
         } else if (this.item == "copper_plate") {
             fac.ctx.fillStyle = "orange";
             fac.ctx.strokeStyle = "black";
             fac.ctx.lineWidth = 2;
-            fac.ctx.fillRect(this.x + fgrid.tsize * 0.2, this.y + fgrid.tsize * 0.2, fgrid.tsize * 0.6, fgrid.tsize * 0.6);
-            fac.ctx.strokeRect(this.x + fgrid.tsize * 0.2, this.y + fgrid.tsize * 0.2, fgrid.tsize * 0.6, fgrid.tsize * 0.6);;
+            fac.ctx.fillRect(this.x + fgrid.tsize * 0.2 - offx, this.y + fgrid.tsize * 0.2 - offy, fgrid.tsize * 0.6, fgrid.tsize * 0.6);
+            fac.ctx.strokeRect(this.x + fgrid.tsize * 0.2 - offx, this.y + fgrid.tsize * 0.2 - offy, fgrid.tsize * 0.6, fgrid.tsize * 0.6);;
         } else if (this.item == "copper_wire") {
             fac.ctx.beginPath();
             fac.ctx.arc(this.x + fgrid.tsize / 2 - offx, this.y + fgrid.tsize / 2 - offy, fgrid.tsize / 2 * 0.6, 0, 2 * Math.PI);
@@ -662,6 +717,24 @@ class fItem {
             fac.ctx.beginPath();
             fac.ctx.arc(this.x + fgrid.tsize / 2 - offx, this.y + fgrid.tsize / 2 - offy, fgrid.tsize / 2 * 0.2, 0, 2 * Math.PI);
             fac.ctx.stroke();
+        } else if (this.item == "circuit") {
+            fac.ctx.translate(this.x-offx,this.y-offy);
+            fac.ctx.scale(10/fgrid.tsize,10/fgrid.tsize);
+            fac.ctx.fillStyle = "darkgreen";
+            fac.ctx.fillRect(2,2,8,8);
+            fac.ctx.strokeStyle = "orange";
+            fac.ctx.lineWidth = 1;
+            fac.ctx.beginPath();
+            fac.ctx.moveTo(4,2);
+            fac.ctx.lineTo(4,8);
+            fac.ctx.stroke();
+            fac.ctx.moveTo(2,3);
+            fac.ctx.lineTo(8,3);
+            fac.ctx.stroke();
+            fac.ctx.lineWidth = 2;
+            fac.ctx.strokeStyle = "black";
+            fac.ctx.strokeRect(2,2,8,8);
+            fac.ctx.resetTransform();
         }
     }
     update() {
@@ -766,19 +839,20 @@ class Slot {
 
 const finv = new Inventory();
 
-class frecelect {
-    constructor(x,y) {
+class fRecelect {
+    constructor(x,y,crafter) {
         this.x = x;
         this.y = y;
+        this.crafter = crafter
         this.height = 100;
         fui.push(this);
     }
     render() {
         fac.ctx.fillStyle = "rgb(170,170,170)";
         fac.ctx.strokeStyle = "rgb(120,120,120)";
-        fac.ctx.fillRect(this.x,this.y,100,this.height);
-        fac.ctx.strokeRect(this.x,this.y,100,this.height);
-        fac.ctx.translate(this.x,this.y);
+        fac.ctx.fillRect(this.x-fplayer.x,this.y-fplayer.y,100,this.height);
+        fac.ctx.strokeRect(this.x-fplayer.x,this.y-fplayer.y,100,this.height);
+        fac.ctx.translate(this.x-fplayer.x,this.y-fplayer.y);
         fac.ctx.strokeStyle = "black";
         fac.ctx.fillStyle = "red";
         fac.ctx.fillRect(83,3,14,14);
@@ -790,20 +864,36 @@ class frecelect {
         fac.ctx.lineTo(95,5)
         fac.ctx.stroke();
         fac.ctx.font = "10px Arial";
-        fac.ctx.fillText("Recipie?",5,0);
+        fac.ctx.fillStyle = "black";
+        fac.ctx.fillText("Recipie?",5,12);
+        fac.ctx.strokeStyle = "black";
+        fac.ctx.fillStyle = "orange";
+        fac.ctx.fillRect(4,15,76,11);
+        fac.ctx.strokeRect(4,15,76,11);
+        fac.ctx.fillStyle = "black";
+        fac.ctx.fillText("Copper Wire",5,24);
+        fac.ctx.strokeStyle = "black";
+        fac.ctx.fillStyle = "darkgreen";
+        fac.ctx.fillRect(4,30,76,11);
+        fac.ctx.strokeRect(4,30,76,11);
+        fac.ctx.fillStyle = "black";
+        fac.ctx.fillText("Circuit",5,39);
         fac.ctx.resetTransform();
     }
     click() {
-        const rx = finput.mx - this.x;
-        const ry = finput.my - this.y;
+        const rx = finput.mx - (this.x-fplayer.x);
+        const ry = finput.my - (this.y-fplayer.y);
         if (rx > 0 && rx < 100 && ry > 0 && ry < this.height) {
             finput.uiclick = true;
             if (rx > 83 && rx < 97 && ry > 3 && ry < 17) {
                 fui.splice(fui.indexOf(this),1);
+            } else if (rx > 4 && rx < 80 && ry > 15 && ry < 26) {
+                this.crafter.recipe = "copper_wire";
+            } else if (rx > 4 && rx < 80 && ry > 30 && ry < 41) {
+                this.crafter.recipe = "circuit";
             }
         }
     }
 }
 
-const fui = [];
-new frecelect(10,10);
+let fui = [];
