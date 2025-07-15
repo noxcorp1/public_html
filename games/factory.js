@@ -1,10 +1,10 @@
 const fac = {
     canvas: document.createElement("canvas"),
     init: false,
-    start: function() {
+    start: function () {
         if (!this.init) {
             fitems = [];
-            fgrid.init(50,50,40);
+            fgrid.init(50, 50, 40);
             this.init = true;
             this.canvas.width = 800;
             this.canvas.height = 400;
@@ -12,8 +12,8 @@ const fac = {
             this.ctx = this.canvas.getContext("2d");
             const place = document.getElementById("factory");
             place.appendChild(this.canvas);
-            this.loop = setInterval(fac.tick,50);
-            document.addEventListener("keydown", function(event) {
+            this.loop = setInterval(fac.tick, 50);
+            document.addEventListener("keydown", function (event) {
                 if (event.key == "w") {
                     finput.w = true;
                 }
@@ -30,20 +30,8 @@ const fac = {
                     fdir += 1;
                     fdir %= 4;
                 }
-                if (event.key == "1") {
-                    fsel = "belt";
-                }
-                if (event.key == "2") {
-                    fsel = "miner";
-                }
-                if (event.key == "3") {
-                    fsel = "smelter";
-                }
-                if (event.key == "4") {
-                    fsel = "inserter";
-                }
             });
-            document.addEventListener("keyup", function(event) {
+            document.addEventListener("keyup", function (event) {
                 if (event.key == "w") {
                     finput.w = false;
                 }
@@ -57,43 +45,47 @@ const fac = {
                     finput.d = false;
                 }
             });
-            document.addEventListener("mousedown", function(event) {
+            document.addEventListener("mousedown", function (event) {
                 finput.click = true;
             });
-            document.addEventListener("mouseup", function(event) {
+            document.addEventListener("mouseup", function (event) {
                 finput.click = false;
             });
-            document.addEventListener("mousemove", function(event) {
+            document.addEventListener("mousemove", function (event) {
                 const rect = fac.canvas.getBoundingClientRect();
-                finput.mx = Math.floor(event.clientX-rect.x);
-                finput.my = Math.floor(event.clientY-rect.y);
+                finput.mx = Math.floor(event.clientX - rect.x);
+                finput.my = Math.floor(event.clientY - rect.y);
             });
         }
     },
-    stop: function() {
+    stop: function () {
         if (this.init) {
             document.getElementById("factory").removeChild(this.canvas);
             this.init = false;
             clearInterval(this.loop);
         }
     },
-    reset: function() {
+    reset: function () {
         fitems = [];
         fgrid.reset();
     },
-    clear: function() {
-        this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
+    clear: function () {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     },
-    tick: function() {
+    tick: function () {
         fac.clear();
-        fgrid.render(fplayer.x,fplayer.y);
+        fgrid.render(fplayer.x, fplayer.y);
         fgrid.update();
         finput.handle();
+        finv.render();
+        for (let i = 0; i < fui.length; i++) {
+            fui[i].render();
+        }
     }
 }
 
 const fgrid = {
-    init: function(width, height,tsize) {
+    init: function (width, height, tsize) {
         this.width = width;
         this.height = height;
         this.ground = [];
@@ -107,11 +99,11 @@ const fgrid = {
                 this.machines[x][y] = null;
             }
         }
-        this.genPatch(4,4,"coal",3);
-        this.genPatch(8,7,"iron",2);
-        this.genPatch(15,6,"copper",2);
+        this.genPatch(4, 4, "coal", 3);
+        this.genPatch(8, 7, "iron", 2);
+        this.genPatch(15, 6, "copper", 2);
     },
-    reset: function() {
+    reset: function () {
         this.ground = [];
         for (let x = 0; x < this.width; x++) {
             this.ground.push(new Array());
@@ -121,46 +113,46 @@ const fgrid = {
                 this.machines[x][y] = null;
             }
         }
-        this.genPatch(3,3,"coal",3);
-        this.genPatch(8,7,"iron",2);
-        this.genPatch(15,6,"copper",2);
+        this.genPatch(3, 3, "coal", 3);
+        this.genPatch(8, 7, "iron", 2);
+        this.genPatch(15, 6, "copper", 2);
     },
-    genPatch(x,y,ore,size) {
-        for (let tx = x-1; tx < x+2; tx++) {
-            for (let ty = y-1; ty < y+2; ty++) {
-                if (Math.random() > 0.2 && this.valCord(tx,ty)) {
-                    this.setg(tx,ty,ore);
+    genPatch(x, y, ore, size) {
+        for (let tx = x - 1; tx < x + 2; tx++) {
+            for (let ty = y - 1; ty < y + 2; ty++) {
+                if (Math.random() > 0.2 && this.valCord(tx, ty)) {
+                    this.setg(tx, ty, ore);
                 }
             }
         }
         if (size > 1) {
-            this.genPatch(x+Math.floor(Math.random()*3)-1,y+Math.floor(Math.random()*3)-1,ore,size-1);
+            this.genPatch(x + Math.floor(Math.random() * 3) - 1, y + Math.floor(Math.random() * 3) - 1, ore, size - 1);
         }
     },
-    getg: function(x,y) {
+    getg: function (x, y) {
         return this.ground[x][y];
     },
-    setg: function(x,y,val) {
+    setg: function (x, y, val) {
         this.ground[x][y] = val;
     },
-    getm: function(x,y) {
+    getm: function (x, y) {
         return this.machines[x][y];
     },
-    setm: function(x,y,val) {
+    setm: function (x, y, val) {
         this.machines[x][y] = val;
     },
-    valCord: function(x,y) {
+    valCord: function (x, y) {
         return (x > -1 && x < this.width && y > -1 && y < this.height);
     },
-    render: function(offx,offy) {
-        for (let x = -1; x < Math.ceil(fac.canvas.width/this.tsize)+1; x++) {
-            for(let y = -1; y < Math.ceil(fac.canvas.width/this.tsize)+1; y++) {
-                const tx = x+Math.floor(offx/this.tsize);
-                const ty = y+Math.floor(offy/this.tsize);
-                const sx = tx*this.tsize-offx;
-                const sy = ty*this.tsize-offy;
-                if (this.valCord(tx,ty)) {
-                    const tile = this.getg(tx,ty);
+    render: function (offx, offy) {
+        for (let x = -1; x < Math.ceil(fac.canvas.width / this.tsize) + 1; x++) {
+            for (let y = -1; y < Math.ceil(fac.canvas.width / this.tsize) + 1; y++) {
+                const tx = x + Math.floor(offx / this.tsize);
+                const ty = y + Math.floor(offy / this.tsize);
+                const sx = tx * this.tsize - offx;
+                const sy = ty * this.tsize - offy;
+                if (this.valCord(tx, ty)) {
+                    const tile = this.getg(tx, ty);
                     if (tile == "grass") {
                         fac.ctx.fillStyle = "green";
                     } else if (tile == "iron") {
@@ -170,30 +162,30 @@ const fgrid = {
                     } else if (tile == "coal") {
                         fac.ctx.fillStyle = "rgb(20,20,20)";
                     }
-                    fac.ctx.fillRect(sx,sy,this.tsize,this.tsize);
-                    const mach = this.getm(tx,ty);
+                    fac.ctx.fillRect(sx, sy, this.tsize, this.tsize);
+                    const mach = this.getm(tx, ty);
                     if (mach instanceof fMachine) {
-                        fac.ctx.translate(sx,sy);
-                        fac.ctx.scale(this.tsize/10,this.tsize/10);
+                        fac.ctx.translate(sx, sy);
+                        fac.ctx.scale(this.tsize / 10, this.tsize / 10);
                         mach.render();
                         fac.ctx.resetTransform();
                     }
                     fac.ctx.strokeStyle = "black";
                     fac.ctx.lineWidth = 2;
-                    fac.ctx.strokeRect(sx,sy,this.tsize,this.tsize);
+                    fac.ctx.strokeRect(sx, sy, this.tsize, this.tsize);
                     for (let i = 0; i < fitems.length; i++) {
-                        fitems[i].render(offx,offy);
+                        fitems[i].render(offx, offy);
                     }
                 }
             }
         }
     },
-    update: function() {
+    update: function () {
         for (let x = 0; x < this.width; x++) {
             for (let y = 0; y < this.height; y++) {
-                mach = this.getm(x,y);
+                mach = this.getm(x, y);
                 if (mach instanceof fMachine) {
-                    mach.update();   
+                    mach.update();
                 }
             }
         }
@@ -220,7 +212,8 @@ const finput = {
     click: false,
     mx: 0,
     my: 0,
-    handle: function() {
+    uiclick: false,
+    handle: function () {
         if (this.w) {
             fplayer.y -= 4;
         }
@@ -233,42 +226,59 @@ const finput = {
         if (this.d) {
             fplayer.x += 4;
         }
-        const tx = Math.floor((this.mx+fplayer.x)/fgrid.tsize);
-        const ty = Math.floor((this.my+fplayer.y)/fgrid.tsize);
+        if (this.click) {
+            this.uiclick = false;
+            finv.click();
+            for (let i = 0; i < fui.length; i++) {
+                fui[i].click();
+            }
+            if (this.uiclick) {
+                this.click = false;
+            }
+        }
+        const tx = Math.floor((this.mx + fplayer.x) / fgrid.tsize);
+        const ty = Math.floor((this.my + fplayer.y) / fgrid.tsize);
         if (fsel == "belt") {
             if (this.click) {
-                fgrid.setm(tx,ty,new fBelt(tx,ty,fdir));
+                fgrid.setm(tx, ty, new fBelt(tx, ty, fdir));
             }
-            fac.ctx.translate(tx*fgrid.tsize-fplayer.x,ty*fgrid.tsize-fplayer.y);
-            fac.ctx.scale(fgrid.tsize/10,fgrid.tsize/10);
-            new fBelt(0,0,fdir).render();
+            fac.ctx.translate(tx * fgrid.tsize - fplayer.x, ty * fgrid.tsize - fplayer.y);
+            fac.ctx.scale(fgrid.tsize / 10, fgrid.tsize / 10);
+            new fBelt(0, 0, fdir).render();
             fac.ctx.resetTransform();
         } else if (fsel == "miner") {
             if (this.click) {
-                fgrid.setm(tx,ty,new fMiner(tx,ty,fdir));
+                fgrid.setm(tx, ty, new fMiner(tx, ty, fdir));
             }
-            fac.ctx.translate(tx*fgrid.tsize-fplayer.x,ty*fgrid.tsize-fplayer.y);
-            fac.ctx.scale(fgrid.tsize/10,fgrid.tsize/10);
-            new fMiner(0,0,fdir).render();
+            fac.ctx.translate(tx * fgrid.tsize - fplayer.x, ty * fgrid.tsize - fplayer.y);
+            fac.ctx.scale(fgrid.tsize / 10, fgrid.tsize / 10);
+            new fMiner(0, 0, fdir).render();
             fac.ctx.resetTransform();
         } else if (fsel == "smelter") {
             if (this.click) {
-                fgrid.setm(tx,ty,new fSmelter(tx,ty,fdir));
+                fgrid.setm(tx, ty, new fSmelter(tx, ty, fdir));
             }
-            fac.ctx.translate(tx*fgrid.tsize-fplayer.x,ty*fgrid.tsize-fplayer.y);
-            fac.ctx.scale(fgrid.tsize/10,fgrid.tsize/10);
-            new fSmelter(0,0,fdir).render();
+            fac.ctx.translate(tx * fgrid.tsize - fplayer.x, ty * fgrid.tsize - fplayer.y);
+            fac.ctx.scale(fgrid.tsize / 10, fgrid.tsize / 10);
+            new fSmelter(0, 0, fdir).render();
             fac.ctx.resetTransform();
         } else if (fsel == "inserter") {
             if (this.click) {
-                fgrid.setm(tx,ty,new fInserter(tx,ty,fdir));
+                fgrid.setm(tx, ty, new fInserter(tx, ty, fdir));
             }
-            fac.ctx.translate(tx*fgrid.tsize-fplayer.x,ty*fgrid.tsize-fplayer.y);
-            fac.ctx.scale(fgrid.tsize/10,fgrid.tsize/10);
-            new fInserter(0,0,fdir).render();
+            fac.ctx.translate(tx * fgrid.tsize - fplayer.x, ty * fgrid.tsize - fplayer.y);
+            fac.ctx.scale(fgrid.tsize / 10, fgrid.tsize / 10);
+            new fInserter(0, 0, fdir).render();
+            fac.ctx.resetTransform();
+        } else if (fsel == "crafter") {
+            if (this.click) {
+                fgrid.setm(tx, ty, new fCrafter(tx, ty, fdir));
+            }
+            fac.ctx.translate(tx * fgrid.tsize - fplayer.x, ty * fgrid.tsize - fplayer.y);
+            fac.ctx.scale(fgrid.tsize / 10, fgrid.tsize / 10);
+            new fCrafter(0, 0, fdir).render();
             fac.ctx.resetTransform();
         }
-        
     }
 }
 
@@ -278,7 +288,7 @@ let fdir = 0
 let fitems = [];
 
 class fMachine {
-    constructor(x,y,dir) {
+    constructor(x, y, dir) {
         this.x = x;
         this.y = y;
         this.dir = dir;
@@ -294,85 +304,85 @@ class fMachine {
 class fBelt extends fMachine {
     render() {
         fac.ctx.fillStyle = "rgb(70,70,70)";
-        fac.ctx.fillRect(0,0,10,10);
+        fac.ctx.fillRect(0, 0, 10, 10);
         fac.ctx.fillStyle = "red";
         if (this.dir == 0) {
             fac.ctx.beginPath();
-            fac.ctx.moveTo(5,6);
-            fac.ctx.lineTo(7,4);
-            fac.ctx.lineTo(3,4);
+            fac.ctx.moveTo(5, 6);
+            fac.ctx.lineTo(7, 4);
+            fac.ctx.lineTo(3, 4);
             fac.ctx.fill();
             fac.ctx.fillStyle = "grey";
-            fac.ctx.fillRect(0,0,2,10);
-            fac.ctx.fillRect(8,0,2,10)
+            fac.ctx.fillRect(0, 0, 2, 10);
+            fac.ctx.fillRect(8, 0, 2, 10)
         } else if (this.dir == 1) {
             fac.ctx.beginPath();
-            fac.ctx.moveTo(5,4);
-            fac.ctx.lineTo(7,6);
-            fac.ctx.lineTo(3,6);
+            fac.ctx.moveTo(5, 4);
+            fac.ctx.lineTo(7, 6);
+            fac.ctx.lineTo(3, 6);
             fac.ctx.fill();
             fac.ctx.fillStyle = "grey";
-            fac.ctx.fillRect(0,0,2,10);
-            fac.ctx.fillRect(8,0,2,10)
+            fac.ctx.fillRect(0, 0, 2, 10);
+            fac.ctx.fillRect(8, 0, 2, 10)
         } else if (this.dir == 2) {
             fac.ctx.beginPath();
-            fac.ctx.moveTo(6,5);
-            fac.ctx.lineTo(4,7);
-            fac.ctx.lineTo(4,3);
+            fac.ctx.moveTo(6, 5);
+            fac.ctx.lineTo(4, 7);
+            fac.ctx.lineTo(4, 3);
             fac.ctx.fill();
             fac.ctx.fillStyle = "grey";
-            fac.ctx.fillRect(0,0,10,2);
-            fac.ctx.fillRect(0,8,10,2)
+            fac.ctx.fillRect(0, 0, 10, 2);
+            fac.ctx.fillRect(0, 8, 10, 2)
         } else if (this.dir == 3) {
             fac.ctx.beginPath();
-            fac.ctx.moveTo(4,5);
-            fac.ctx.lineTo(6,7);
-            fac.ctx.lineTo(6,3);
+            fac.ctx.moveTo(4, 5);
+            fac.ctx.lineTo(6, 7);
+            fac.ctx.lineTo(6, 3);
             fac.ctx.fill();
             fac.ctx.fillStyle = "grey";
-            fac.ctx.fillRect(0,0,10,2);
-            fac.ctx.fillRect(0,8,10,2)
+            fac.ctx.fillRect(0, 0, 10, 2);
+            fac.ctx.fillRect(0, 8, 10, 2)
         }
     }
 }
 
 class fMiner extends fMachine {
-    constructor(x,y,dir) {
-        super(x,y,dir);
+    constructor(x, y, dir) {
+        super(x, y, dir);
         this.tick = 0;
     }
     render() {
         fac.ctx.fillStyle = "grey";
-        fac.ctx.fillRect(0,0,10,10);
+        fac.ctx.fillRect(0, 0, 10, 10);
         fac.ctx.strokeStyle = "black";
         fac.ctx.fillStyle = "rgb(60,60,60)";
         fac.ctx.lineWidth = 0.5;
         fac.ctx.beginPath();
-        fac.ctx.arc(5,5,3,0,2*Math.PI);
+        fac.ctx.arc(5, 5, 3, 0, 2 * Math.PI);
         fac.ctx.fill();
         fac.ctx.stroke();
         fac.ctx.beginPath();
-        fac.ctx.arc(5,5,2,0,2*Math.PI);
+        fac.ctx.arc(5, 5, 2, 0, 2 * Math.PI);
         fac.ctx.stroke();
         fac.ctx.beginPath();
-        fac.ctx.arc(5,5,1,0,2*Math.PI);
+        fac.ctx.arc(5, 5, 1, 0, 2 * Math.PI);
         fac.ctx.stroke();
         fac.ctx.fillStyle = "red";
         if (this.dir == 0) {
-            fac.ctx.fillRect(3,9,4,1);
+            fac.ctx.fillRect(3, 9, 4, 1);
         } else if (this.dir == 1) {
-            fac.ctx.fillRect(3,0,4,1);
+            fac.ctx.fillRect(3, 0, 4, 1);
         } else if (this.dir == 2) {
-            fac.ctx.fillRect(9,3,1,4);
+            fac.ctx.fillRect(9, 3, 1, 4);
         } else if (this.dir == 3) {
-            fac.ctx.fillRect(0,3,1,4);
+            fac.ctx.fillRect(0, 3, 1, 4);
         }
     }
     update() { //BUG: should probably check if item is on belt currently
         this.tick += 1;
         if (this.tick > 80) {
-            let tx = this.x*fgrid.tsize;
-            let ty = this.y*fgrid.tsize;
+            let tx = this.x * fgrid.tsize;
+            let ty = this.y * fgrid.tsize;
             switch (this.dir) {
                 case 0:
                     ty += fgrid.tsize;
@@ -393,9 +403,9 @@ class fMiner extends fMachine {
                 }
             }
             this.tick = 0;
-            const tile = fgrid.getg(this.x,this.y);
+            const tile = fgrid.getg(this.x, this.y);
             if (tile != "grass") {
-                new fItem(tx/fgrid.tsize,ty/fgrid.tsize,tile+"_ore");
+                new fItem(tx / fgrid.tsize, ty / fgrid.tsize, tile + "_ore");
             }
         }
     }
@@ -404,59 +414,59 @@ class fMiner extends fMachine {
 class fInserter extends fMachine {
     render() {
         fac.ctx.fillStyle = "grey";
-        fac.ctx.fillRect(0,0,10,10);
+        fac.ctx.fillRect(0, 0, 10, 10);
         fac.ctx.fillStyle = "black";
         if (this.dir == 0) {
-            fac.ctx.fillRect(3,0,4,3);
+            fac.ctx.fillRect(3, 0, 4, 3);
         } else if (this.dir == 1) {
-            fac.ctx.fillRect(3,7,4,3);
+            fac.ctx.fillRect(3, 7, 4, 3);
         } else if (this.dir == 2) {
-            fac.ctx.fillRect(0,3,3,4);
+            fac.ctx.fillRect(0, 3, 3, 4);
         } else if (this.dir == 3) {
-            fac.ctx.fillRect(7,3,3,4);
+            fac.ctx.fillRect(7, 3, 3, 4);
         }
         fac.ctx.fillStyle = "red";
         if (this.dir == 0) {
             fac.ctx.beginPath();
-            fac.ctx.moveTo(5,6);
-            fac.ctx.lineTo(7,4);
-            fac.ctx.lineTo(3,4);
+            fac.ctx.moveTo(5, 6);
+            fac.ctx.lineTo(7, 4);
+            fac.ctx.lineTo(3, 4);
             fac.ctx.fill();
             fac.ctx.fillStyle = "grey";
-            fac.ctx.fillRect(0,0,2,10);
-            fac.ctx.fillRect(8,0,2,10)
+            fac.ctx.fillRect(0, 0, 2, 10);
+            fac.ctx.fillRect(8, 0, 2, 10)
         } else if (this.dir == 1) {
             fac.ctx.beginPath();
-            fac.ctx.moveTo(5,4);
-            fac.ctx.lineTo(7,6);
-            fac.ctx.lineTo(3,6);
+            fac.ctx.moveTo(5, 4);
+            fac.ctx.lineTo(7, 6);
+            fac.ctx.lineTo(3, 6);
             fac.ctx.fill();
             fac.ctx.fillStyle = "grey";
-            fac.ctx.fillRect(0,0,2,10);
-            fac.ctx.fillRect(8,0,2,10)
+            fac.ctx.fillRect(0, 0, 2, 10);
+            fac.ctx.fillRect(8, 0, 2, 10)
         } else if (this.dir == 2) {
             fac.ctx.beginPath();
-            fac.ctx.moveTo(6,5);
-            fac.ctx.lineTo(4,7);
-            fac.ctx.lineTo(4,3);
+            fac.ctx.moveTo(6, 5);
+            fac.ctx.lineTo(4, 7);
+            fac.ctx.lineTo(4, 3);
             fac.ctx.fill();
             fac.ctx.fillStyle = "grey";
-            fac.ctx.fillRect(0,0,10,2);
-            fac.ctx.fillRect(0,8,10,2)
+            fac.ctx.fillRect(0, 0, 10, 2);
+            fac.ctx.fillRect(0, 8, 10, 2)
         } else if (this.dir == 3) {
             fac.ctx.beginPath();
-            fac.ctx.moveTo(4,5);
-            fac.ctx.lineTo(6,7);
-            fac.ctx.lineTo(6,3);
+            fac.ctx.moveTo(4, 5);
+            fac.ctx.lineTo(6, 7);
+            fac.ctx.lineTo(6, 3);
             fac.ctx.fill();
             fac.ctx.fillStyle = "grey";
-            fac.ctx.fillRect(0,0,10,2);
-            fac.ctx.fillRect(0,8,10,2)
+            fac.ctx.fillRect(0, 0, 10, 2);
+            fac.ctx.fillRect(0, 8, 10, 2)
         }
     }
     update() {
-        let ix = this.x*fgrid.tsize;
-        let iy = this.y*fgrid.tsize;
+        let ix = this.x * fgrid.tsize;
+        let iy = this.y * fgrid.tsize;
         let ox = this.x;
         let oy = this.y;
         switch (this.dir) {
@@ -479,13 +489,13 @@ class fInserter extends fMachine {
         }
         for (let i = 0; i < fitems.length; i++) {
             if (fitems[i].x == ix && fitems[i].y == iy) {
-                const mach = fgrid.getm(ox,oy);
+                const mach = fgrid.getm(ox, oy);
                 if (mach instanceof fSmelter) {
                     if ((fitems[i].item == "copper_ore" || fitems[i].item == "iron_ore") && mach.input == null) {
-                        mach.input = fitems.splice(i,1)[0];
+                        mach.input = fitems.splice(i, 1)[0];
                     } else if (fitems[i].item == "coal_ore" && mach.fuel <= 5) {
                         mach.fuel += 1;
-                        fitems.splice(i,1)[0];
+                        fitems.splice(i, 1)[0];
                     }
                 }
             }
@@ -494,30 +504,30 @@ class fInserter extends fMachine {
 }
 
 class fSmelter extends fMachine {
-    constructor(x,y,dir) {
-        super(x,y,dir);
+    constructor(x, y, dir) {
+        super(x, y, dir);
         this.tick = 0;
         this.input = null;
         this.fuel = 0;
     }
     render() {
         fac.ctx.fillStyle = "grey";
-        fac.ctx.fillRect(0,0,10,10);
+        fac.ctx.fillRect(0, 0, 10, 10);
         fac.ctx.fillStyle = "red";
-        fac.ctx.fillRect(2,2,6,2);
+        fac.ctx.fillRect(2, 2, 6, 2);
         fac.ctx.fillStyle = "orange";
-        fac.ctx.fillRect(2,4,6,2);
+        fac.ctx.fillRect(2, 4, 6, 2);
         fac.ctx.fillStyle = "yellow";
-        fac.ctx.fillRect(2,6,6,2);
+        fac.ctx.fillRect(2, 6, 6, 2);
         fac.ctx.fillStyle = "red";
         if (this.dir == 0) {
-            fac.ctx.fillRect(3,9,4,1);
+            fac.ctx.fillRect(3, 9, 4, 1);
         } else if (this.dir == 1) {
-            fac.ctx.fillRect(3,0,4,1);
+            fac.ctx.fillRect(3, 0, 4, 1);
         } else if (this.dir == 2) {
-            fac.ctx.fillRect(9,3,1,4);
+            fac.ctx.fillRect(9, 3, 1, 4);
         } else if (this.dir == 3) {
-            fac.ctx.fillRect(0,3,1,4);
+            fac.ctx.fillRect(0, 3, 1, 4);
         }
     }
     update() {
@@ -526,8 +536,8 @@ class fSmelter extends fMachine {
             this.tick = 0;
         }
         if (this.tick > 40) {
-            let tx = this.x*fgrid.tsize;
-            let ty = this.y*fgrid.tsize;
+            let tx = this.x * fgrid.tsize;
+            let ty = this.y * fgrid.tsize;
             switch (this.dir) {
                 case 0:
                     ty += fgrid.tsize;
@@ -549,9 +559,9 @@ class fSmelter extends fMachine {
             }
             this.tick = 0;
             if (this.input.item == "iron_ore") {
-                new fItem(tx/fgrid.tsize,ty/fgrid.tsize,"iron_plate");
+                new fItem(tx / fgrid.tsize, ty / fgrid.tsize, "iron_plate");
             } else if (this.input.item == "copper_ore") {
-                new fItem(tx/fgrid.tsize,ty/fgrid.tsize,"copper_plate");
+                new fItem(tx / fgrid.tsize, ty / fgrid.tsize, "copper_plate");
             }
             this.input = null;
             this.fuel -= 1;
@@ -559,19 +569,50 @@ class fSmelter extends fMachine {
     }
 }
 
+class fCrafter extends fMachine {
+    constructor(x, y, dir) {
+        super(x, y, dir);
+        this.tick = 0;
+        this.in1 = null;
+        this.in2 = null;
+        this.recipe = "none";
+    }
+    render() {
+        fac.ctx.fillStyle = "grey";
+        fac.ctx.fillRect(0, 0, 10, 10);
+        fac.ctx.fillStyle = "orange";
+        fac.ctx.beginPath();
+        fac.ctx.arc(3, 3, 2, 0, 2 * Math.PI);
+        fac.ctx.fill();
+        fac.ctx.beginPath();
+        fac.ctx.arc(7, 7, 2, 0, 2 * Math.PI);
+        fac.ctx.fill();
+        fac.ctx.fillStyle = "red";
+        if (this.dir == 0) {
+            fac.ctx.fillRect(3, 9, 4, 1);
+        } else if (this.dir == 1) {
+            fac.ctx.fillRect(3, 0, 4, 1);
+        } else if (this.dir == 2) {
+            fac.ctx.fillRect(9, 3, 1, 4);
+        } else if (this.dir == 3) {
+            fac.ctx.fillRect(0, 3, 1, 4);
+        }
+    }
+}
+
 class fItem {
-    constructor(x,y,item) {
-        this.x = fgrid.tsize*x;
-        this.y = fgrid.tsize*y;
+    constructor(x, y, item) {
+        this.x = fgrid.tsize * x;
+        this.y = fgrid.tsize * y;
         this.tx = this.x;
         this.ty = this.y;
         this.item = item;
         fitems.push(this);
     }
-    render(offx,offy) {
+    render(offx, offy) {
         if (this.item == "coal_ore") {
             fac.ctx.beginPath();
-            fac.ctx.arc(this.x+fgrid.tsize/2-offx,this.y+fgrid.tsize/2-offy,fgrid.tsize/2*0.6,0,2*Math.PI);
+            fac.ctx.arc(this.x + fgrid.tsize / 2 - offx, this.y + fgrid.tsize / 2 - offy, fgrid.tsize / 2 * 0.6, 0, 2 * Math.PI);
             fac.ctx.fillStyle = "rgb(20,20,20)";
             fac.ctx.strokeStyle = "black";
             fac.ctx.lineWidth = 2;
@@ -579,7 +620,7 @@ class fItem {
             fac.ctx.stroke();
         } else if (this.item == "iron_ore") {
             fac.ctx.beginPath();
-            fac.ctx.arc(this.x+fgrid.tsize/2-offx,this.y+fgrid.tsize/2-offy,fgrid.tsize/2*0.6,0,2*Math.PI);
+            fac.ctx.arc(this.x + fgrid.tsize / 2 - offx, this.y + fgrid.tsize / 2 - offy, fgrid.tsize / 2 * 0.6, 0, 2 * Math.PI);
             fac.ctx.fillStyle = colors.iron;
             fac.ctx.strokeStyle = "black";
             fac.ctx.lineWidth = 2;
@@ -587,7 +628,7 @@ class fItem {
             fac.ctx.stroke();
         } else if (this.item == "copper_ore") {
             fac.ctx.beginPath();
-            fac.ctx.arc(this.x+fgrid.tsize/2-offx,this.y+fgrid.tsize/2-offy,fgrid.tsize/2*0.6,0,2*Math.PI);
+            fac.ctx.arc(this.x + fgrid.tsize / 2 - offx, this.y + fgrid.tsize / 2 - offy, fgrid.tsize / 2 * 0.6, 0, 2 * Math.PI);
             fac.ctx.fillStyle = "orange";
             fac.ctx.strokeStyle = "black";
             fac.ctx.lineWidth = 2;
@@ -597,20 +638,36 @@ class fItem {
             fac.ctx.fillStyle = "white";
             fac.ctx.strokeStyle = "black";
             fac.ctx.lineWidth = 2;
-            fac.ctx.fillRect(this.x+fgrid.tsize*0.2,this.y+fgrid.tsize*0.2,fgrid.tsize*0.6,fgrid.tsize*0.6);
-            fac.ctx.strokeRect(this.x+fgrid.tsize*0.2,this.y+fgrid.tsize*0.2,fgrid.tsize*0.6,fgrid.tsize*0.6);
+            fac.ctx.fillRect(this.x + fgrid.tsize * 0.2, this.y + fgrid.tsize * 0.2, fgrid.tsize * 0.6, fgrid.tsize * 0.6);
+            fac.ctx.strokeRect(this.x + fgrid.tsize * 0.2, this.y + fgrid.tsize * 0.2, fgrid.tsize * 0.6, fgrid.tsize * 0.6);
         } else if (this.item == "copper_plate") {
             fac.ctx.fillStyle = "orange";
             fac.ctx.strokeStyle = "black";
             fac.ctx.lineWidth = 2;
-            fac.ctx.fillRect(this.x+fgrid.tsize*0.2,this.y+fgrid.tsize*0.2,fgrid.tsize*0.6,fgrid.tsize*0.6);
-            fac.ctx.strokeRect(this.x+fgrid.tsize*0.2,this.y+fgrid.tsize*0.2,fgrid.tsize*0.6,fgrid.tsize*0.6);;
+            fac.ctx.fillRect(this.x + fgrid.tsize * 0.2, this.y + fgrid.tsize * 0.2, fgrid.tsize * 0.6, fgrid.tsize * 0.6);
+            fac.ctx.strokeRect(this.x + fgrid.tsize * 0.2, this.y + fgrid.tsize * 0.2, fgrid.tsize * 0.6, fgrid.tsize * 0.6);;
+        } else if (this.item == "copper_wire") {
+            fac.ctx.beginPath();
+            fac.ctx.arc(this.x + fgrid.tsize / 2 - offx, this.y + fgrid.tsize / 2 - offy, fgrid.tsize / 2 * 0.6, 0, 2 * Math.PI);
+            fac.ctx.fillStyle = "orange";
+            fac.ctx.strokeStyle = "black";
+            fac.ctx.lineWidth = 2;
+            fac.ctx.fill();
+            fac.ctx.stroke();
+            fac.ctx.strokeStyle = "black";
+            fac.ctx.lineWidth = 0.5;
+            fac.ctx.beginPath();
+            fac.ctx.arc(this.x + fgrid.tsize / 2 - offx, this.y + fgrid.tsize / 2 - offy, fgrid.tsize / 2 * 0.4, 0, 2 * Math.PI);
+            fac.ctx.stroke();
+            fac.ctx.beginPath();
+            fac.ctx.arc(this.x + fgrid.tsize / 2 - offx, this.y + fgrid.tsize / 2 - offy, fgrid.tsize / 2 * 0.2, 0, 2 * Math.PI);
+            fac.ctx.stroke();
         }
     }
     update() {
         if (this.x == this.tx && this.y == this.ty) {
-            if (fgrid.getm(Math.floor(this.x/fgrid.tsize),Math.floor(this.y/fgrid.tsize)) instanceof fBelt) {
-                const belt = fgrid.getm(Math.floor(this.x/fgrid.tsize),Math.floor(this.y/fgrid.tsize))
+            if (fgrid.getm(Math.floor(this.x / fgrid.tsize), Math.floor(this.y / fgrid.tsize)) instanceof fBelt) {
+                const belt = fgrid.getm(Math.floor(this.x / fgrid.tsize), Math.floor(this.y / fgrid.tsize))
                 const otx = this.tx;
                 const oty = this.ty;
                 if (belt.dir == 0) {
@@ -622,7 +679,7 @@ class fItem {
                 } else if (belt.dir == 3) {
                     this.tx -= fgrid.tsize;
                 }
-                if (!(fgrid.getm(this.tx/fgrid.tsize,this.ty/fgrid.tsize) instanceof fBelt)) {
+                if (!(fgrid.getm(this.tx / fgrid.tsize, this.ty / fgrid.tsize) instanceof fBelt)) {
                     this.tx = otx;
                     this.ty = oty;
                     return
@@ -648,3 +705,105 @@ class fItem {
         }
     }
 }
+
+class Inventory {
+    constructor() {
+        this.slots = [new Slot("belt"), new Slot("inserter"), new Slot("miner"), new Slot("smelter"), new Slot("crafter"), new Slot("none"), new Slot("none"), new Slot("none"), new Slot("none"), new Slot("none")]
+    }
+    render() {
+        for (let i = 0; i < 10; i++) {
+            fac.ctx.resetTransform();
+            fac.ctx.translate(130 + i * 55, 350);
+            this.slots[i].render();
+            fac.ctx.resetTransform();
+        }
+    }
+    click() {
+        for (let i = 0; i < 10; i++) {
+            this.slots[i].click(130 + i * 55, 350);
+        }
+    }
+}
+
+class Slot {
+    constructor(item) {
+        this.item = item;
+    }
+    render() {
+        fac.ctx.fillStyle = "rgb(170,170,170)";
+        fac.ctx.strokeStyle = "rgb(120,120,120)";
+        fac.ctx.fillRect(0, 0, 45, 45);
+        fac.ctx.strokeRect(0, 0, 45, 45);
+        fac.ctx.translate(7.5, 7.5);
+        if (this.item != "none") {
+            fac.ctx.strokeStyle = "black";
+            fac.ctx.lineWidth = 2;
+            fac.ctx.strokeRect(0, 0, 30, 30);
+        }
+        fac.ctx.scale(3, 3);
+        if (this.item == "belt") {
+            new fBelt(0, 0, 0).render();
+        } else if (this.item == "inserter") {
+            new fInserter(0, 0, 0).render();
+        } else if (this.item == "smelter") {
+            new fSmelter(0, 0, 0).render();
+        } else if (this.item == "crafter") {
+            new fCrafter(0, 0, 0).render();
+        } else if (this.item == "miner") {
+            new fMiner(0, 0, 0).render();
+        }
+        fac.ctx.resetTransform();
+    }
+    click(x, y) {
+        if (finput.mx - x > 0 && finput.mx - x < 45 && finput.my - y > 0 && finput.my - y < 45) {
+            finput.uiclick = true;
+            if (this.item != "none") {
+                fsel = this.item;
+            }
+        }
+    }
+}
+
+const finv = new Inventory();
+
+class frecelect {
+    constructor(x,y) {
+        this.x = x;
+        this.y = y;
+        this.height = 100;
+        fui.push(this);
+    }
+    render() {
+        fac.ctx.fillStyle = "rgb(170,170,170)";
+        fac.ctx.strokeStyle = "rgb(120,120,120)";
+        fac.ctx.fillRect(this.x,this.y,100,this.height);
+        fac.ctx.strokeRect(this.x,this.y,100,this.height);
+        fac.ctx.translate(this.x,this.y);
+        fac.ctx.strokeStyle = "black";
+        fac.ctx.fillStyle = "red";
+        fac.ctx.fillRect(83,3,14,14);
+        fac.ctx.beginPath();
+        fac.ctx.moveTo(85,5);
+        fac.ctx.lineTo(95,15)
+        fac.ctx.stroke();
+        fac.ctx.moveTo(85,15);
+        fac.ctx.lineTo(95,5)
+        fac.ctx.stroke();
+        fac.ctx.font = "10px Arial";
+        fac.ctx.fillText("Recipie?",5,0);
+        fac.ctx.resetTransform();
+    }
+    click() {
+        const rx = finput.mx - this.x;
+        const ry = finput.my - this.y;
+        if (rx > 0 && rx < 100 && ry > 0 && ry < this.height) {
+            finput.uiclick = true;
+            if (rx > 83 && rx < 97 && ry > 3 && ry < 17) {
+                fui.splice(fui.indexOf(this),1);
+            }
+        }
+    }
+}
+
+const fui = [];
+new frecelect(10,10);
