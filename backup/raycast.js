@@ -10,7 +10,7 @@ rc = {
             this.ctx = this.canvas.getContext("2d");
             const place = document.getElementById("ray");
             place.appendChild(this.canvas);
-            this.loop = setInterval(rtick,100);
+            this.loop = setInterval(rtick,50);
         }
     },
     clear: function() {
@@ -49,25 +49,10 @@ swall = [
     ["grey","grey","grey","grey","grey","grey","grey","grey","dgrey"]
 ]
 
-roof = [
-    ["brown","brown","brown","brown","brown","brown","brown","dbrown","brown","brown"],
-    ["brown","brown","brown","brown","brown","brown","brown","dbrown","brown","brown"],
-    ["brown","brown","brown","brown","brown","brown","brown","dbrown","brown","brown"],
-    ["brown","brown","brown","brown","brown","brown","brown","dbrown","brown","brown"],
-    ["dbrown","dbrown","dbrown","dbrown","dbrown","dbrown","dbrown","dbrown","dbrown","dbrown"],
-    ["brown","brown","brown","dbrown","brown","brown","brown","brown","brown","brown"],
-    ["brown","brown","brown","dbrown","brown","brown","brown","brown","brown","brown"],
-    ["brown","brown","brown","dbrown","brown","brown","brown","brown","brown","brown"],
-    ["brown","brown","brown","dbrown","brown","brown","brown","brown","brown","brown"],
-    ["dbrown","dbrown","dbrown","dbrown","dbrown","dbrown","dbrown","dbrown","dbrown","dbrown"]
-]
-
 rcolors = new Map([
     ["grey",[170,170,170]],
     ["dgrey",[100,100,100]],
-    ["black",[0,0,0]],
-    ["brown",[117,77,50]],
-    ["dbrown",[69,45,30]]
+    ["black",[0,0,0]]
 ])
 
 camera = {
@@ -95,16 +80,15 @@ camera = {
                     break;
                 }
             }
-            let b = 0;
-            if (step < 50) {
+            if (step < 100) {
                 //const l = 170*(1-step/100);
                 //rc.ctx.fillStyle = "rgb("+l+","+l+","+l+")";
                 step *= Math.cos(radians(a-this.r));
-                const h = this.size/step*400;
+                const h = this.size/step*700;
                 const tx = (Math.floor(rayX*9)+Math.floor(rayY*9))%9;
                 const ph = h/9;
                 for (let ty = 0; ty < 9; ty++) {
-                    const l = (1-step/50);
+                    const l = (1-step/100);
                     const r = rcolors.get(swall[ty][tx])[0]*l;
                     const g = rcolors.get(swall[ty][tx])[1]*l;
                     const b = rcolors.get(swall[ty][tx])[2]*l;
@@ -112,29 +96,11 @@ camera = {
                     const y = Math.floor((rc.canvas.height-h)/2)+ty*ph;
                     rc.ctx.fillRect(x,y,1,ph+1);
                 }
-                b = Math.floor((rc.canvas.height-h)/2)
             } else {
                 rc.ctx.fillStyle = "black";
                 step *= Math.cos(radians(a-this.r));
-                const h = this.size/step*400;
+                const h = this.size/step*700;
                 rc.ctx.fillRect(x,Math.floor((rc.canvas.height-h)/2),1,h);
-                b = Math.floor((rc.canvas.height-h)/2)
-            }
-            for (let y = 0; y < b; y += 2) {
-                d = 200/(200-y)*this.size;
-                d /= this.size;
-                d /= Math.cos(radians(a-this.r));
-                const fx = Math.sin(radians(a))*d+this.x;
-                const fy = Math.cos(radians(a))*d+this.y;
-                const l = (1-d/5);
-                const tx = Math.floor(fx*10)%10;
-                const ty = Math.floor(fy*10)%10;
-                const r = rcolors.get(roof[tx][ty])[0]*l;
-                const g = rcolors.get(roof[tx][ty])[1]*l;
-                const b = rcolors.get(roof[tx][ty])[2]*l;
-                rc.ctx.fillStyle = "rgb("+r+","+g+","+b+")";
-                rc.ctx.fillRect(x,y,1,4);
-                rc.ctx.fillRect(x,rc.canvas.height-y-4,1,4)
             }
             x++;
         }
@@ -172,10 +138,10 @@ const rinputs = {
             camera.y += cx;
         }
         if (this.la) {
-            camera.r -= 4;
+            camera.r -= 2;
         }
         if (this.ra) {
-            camera.r += 4;
+            camera.r += 2;
         }
     }
 }
@@ -233,12 +199,8 @@ function rstop() {
     }
 }
 
-const ftorch = new Image();
-ftorch.src = "textures/torch.png"
-
 function rtick() {
     rc.clear();
     camera.render();
-    rc.ctx.drawImage(ftorch,450,150,350,350);
     rinputs.handle();
 }
