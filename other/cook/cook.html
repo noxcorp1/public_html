@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cook thing</title>
+</head>
+<body>
+    <div>
+        <header>
+            <h1>AI COOK</h1>
+            <p>AI recipie gen</p>
+        </header>
+        <main>
+            <div id = "input-section">
+                <div id="api-key-section">
+                    <label for="api-key">API KEY:</label>
+                    <input type="password" id="api-key" placeholder="Enter key">
+                    <button id="save-api-key">Save API Key</button>
+                </div>
+            </div>
+            <div class="ingredients-section">
+                <label for="ingredients">Available ingredients</label>
+                <textarea id="ingredients" placeholder="Enter ingredient, csv"></textarea>
+            </div>
+            <div class="preference-section">
+                <label for="dietary">Prefrences</label>
+                <select id="dietary">
+                    <option value="">None</option>
+                </select>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
