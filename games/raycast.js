@@ -21,7 +21,7 @@ rc = {
     }
 }
 
-map = [
+l1 = [
     [1,1,1,1,1,1,1,5,1,4,1,5,1,1,1],
     [1,0,0,0,1,0,0,0,0,0,0,0,0,0,1],
     [4,3,0,0,2,0,0,3,0,0,0,3,0,0,5],
@@ -37,8 +37,29 @@ map = [
     [4,0,3,0,1,0,0,3,0,0,0,3,0,0,1],
     [5,0,0,0,1,0,0,0,0,0,0,0,0,0,5],
     [1,0,0,0,2,0,0,0,0,0,0,0,0,0,1],
-    [1,1,5,1,1,1,1,5,1,4,1,5,1,1,1]
+    [1,1,5,1,1,1,1,5,1,4,1,5,1,6,1]
 ]
+l2 = [
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,7,0,0,0,0,3,0,1],
+    [1,2,1,1,1,1,1,1,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,1,0,0,0,0,3,0,1],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,1],
+    [1,0,0,3,0,0,0,1,0,0,1,1,1,1,1],
+    [1,0,0,0,0,0,0,2,0,0,1,0,0,0,1],
+    [1,1,1,1,1,1,1,1,0,0,2,0,0,3,1],
+    [1,0,0,0,0,0,0,1,0,0,1,0,0,0,1],
+    [1,0,0,3,0,0,0,1,0,0,1,1,1,1,1],
+    [1,0,0,0,0,0,0,1,0,0,1,0,3,0,1],
+    [1,0,0,0,0,0,0,1,0,0,1,0,0,0,1],
+    [1,0,0,3,0,0,0,2,0,0,2,0,0,0,1],
+    [1,0,0,0,0,0,0,1,0,0,1,0,0,0,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+]
+level = 1;
+
+map = []
 
 swall = [
     ["grey","grey","grey","grey","dgrey","grey","grey","grey","grey"],
@@ -50,6 +71,17 @@ swall = [
     ["grey","grey","grey","grey","grey","grey","grey","grey","dgrey"],
     ["grey","grey","grey","grey","grey","grey","grey","grey","dgrey"],
     ["grey","grey","grey","grey","grey","grey","grey","grey","dgrey"]
+]
+edoor = [
+    ["grey","grey","grey","grey","dgrey","grey","grey","grey","grey"],
+    ["grey","grey","grey","black","black","black","grey","grey","grey"],
+    ["grey","grey","black","black","black","black","black","grey","grey"],
+    ["grey","grey","black","black","black","black","black","grey","grey"],
+    ["dgrey","dgrey","black","black","black","black","black","dgrey","dgrey"],
+    ["grey","grey","black","black","black","black","black","grey","dgrey"],
+    ["grey","grey","black","black","black","black","black","grey","dgrey"],
+    ["grey","grey","black","black","black","black","black","grey","dgrey"],
+    ["grey","grey","black","black","black","black","black","grey","dgrey"]
 ]
 painting = [
     ["grey","grey","grey","grey","dgrey","grey","grey","grey","grey"],
@@ -96,13 +128,22 @@ roof = [
     ["brown","brown","brown","dbrown","brown","brown","brown","brown","brown","brown"],
     ["dbrown","dbrown","dbrown","dbrown","dbrown","dbrown","dbrown","dbrown","dbrown","dbrown"]
 ]
-
 coin = [
     ["black","black","black","black","black"],
     ["black","yellow","yellow","yellow","black"],
     ["black","yellow","yellow","yellow","black"],
     ["black","yellow","yellow","yellow","black"],
     ["black","black","black","black","black"],
+]
+ghost = [
+    ["","white","white","white","",],
+    ["white","black","white","black","white",],
+    ["white","white","white","white","white",],
+    ["white","black","black","black","white",],
+    ["white","white","white","white","white",],
+    ["white","white","white","white","white",],
+    ["white","white","white","white","white",],
+    ["","white","white","","white",],
 ]
 
 rcolors = new Map([
@@ -113,7 +154,8 @@ rcolors = new Map([
     ["dbrown",[69,45,30]],
     ["yellow",[255,255,0]],
     ["green",[0,255,0]],
-    ["lblue",[112,193,255]]
+    ["lblue",[112,193,255]],
+    ["white",[255,255,255]]
 ])
 
 camera = {
@@ -151,9 +193,13 @@ camera = {
                 } else if (map[Math.floor(rayX)][Math.floor(rayY)] == 5) {
                     wt = wwindow;
                     break;
+                } else if (map[Math.floor(rayX)][Math.floor(rayY)] == 6) {
+                    wt = edoor;
+                    break;
                 }
             }
             let b = 0;
+            let t = 0;
             if (step < 50) {
                 //const l = 170*(1-step/100);
                 //rc.ctx.fillStyle = "rgb("+l+","+l+","+l+")";
@@ -168,33 +214,49 @@ camera = {
                     const g = rcolors.get(wt[ty][tx])[1]*l*ftcolor[1];
                     const b = rcolors.get(wt[ty][tx])[2]*l*ftcolor[2];
                     rc.ctx.fillStyle = "rgb("+r+","+g+","+b+")";
-                    const y = Math.floor((rc.canvas.height+this.yoff-h)/2)+ty*ph;
+                    const y = Math.floor((rc.canvas.height-h)/2)+ty*ph;
                     rc.ctx.fillRect(x,y+this.yoff,1,ph+1);
                 }
-                b = Math.floor((rc.canvas.height+this.yoff-h)/2)
+                b = Math.floor((rc.canvas.height-h)/2)+this.yoff
+                t = Math.floor((rc.canvas.height-h)/2)+h+this.yoff
             } else {
                 rc.ctx.fillStyle = "black";
                 step *= Math.cos(radians(a-this.r));
                 this.db[x] = step
                 const h = this.size/step*400;
-                rc.ctx.fillRect(x,Math.floor((rc.canvas.height+this.yoff-h)/2),1,h);
-                b = Math.floor((rc.canvas.height+this.yoff-h)/2)
+                rc.ctx.fillRect(x,Math.floor((rc.canvas.height-h)/2)+this.yoff,1,h);
+                b = Math.floor((rc.canvas.height-h)/2)+this.yoff
+                t = Math.floor((rc.canvas.height-h)/2)+h-1+this.yoff
             }
-            for (let y = 0; y < b; y += 2) {
-                d = (200+this.yoff)/((200+this.yoff)-y)*this.size;
+            for (let y = 0; y < b; y += 4) {
+                d = (200)/((200+this.yoff)-y)*this.size;
                 d /= this.size;
                 d /= Math.cos(radians(a-this.r));
                 const fx = Math.sin(radians(a))*d+this.x;
                 const fy = Math.cos(radians(a))*d+this.y;
                 const l = (1-d/(5+fti/10));
-                const tx = Math.floor(fx*10)%10;
-                const ty = Math.floor(fy*10)%10;
+                const tx = Math.abs(Math.floor(fx*10)%10);
+                const ty = Math.abs(Math.floor(fy*10)%10);
                 const r = rcolors.get(roof[tx][ty])[0]*l*ftcolor[0];
                 const g = rcolors.get(roof[tx][ty])[1]*l*ftcolor[1];
                 const b = rcolors.get(roof[tx][ty])[2]*l*ftcolor[2];
                 rc.ctx.fillStyle = "rgb("+r+","+g+","+b+")";
-                rc.ctx.fillRect(x,y+this.yoff,1,4);
-                rc.ctx.fillRect(x,(rc.canvas.height+this.yoff)-y-4,1,4)
+                rc.ctx.fillRect(x,y,1,5);
+            }
+            for (let y = t; y < rc.canvas.height; y += 4) {
+                d = (200)/((200-this.yoff)-(rc.canvas.height-y))*this.size;
+                d /= this.size;
+                d /= Math.cos(radians(a-this.r));
+                const fx = Math.sin(radians(a))*d+this.x;
+                const fy = Math.cos(radians(a))*d+this.y;
+                const l = (1-d/(5+fti/10));
+                const tx = Math.abs(Math.floor(fx*10)%10);
+                const ty = Math.abs(Math.floor(fy*10)%10);
+                const r = rcolors.get(roof[tx][ty])[0]*l*ftcolor[0];
+                const g = rcolors.get(roof[tx][ty])[1]*l*ftcolor[1];
+                const b = rcolors.get(roof[tx][ty])[2]*l*ftcolor[2];
+                rc.ctx.fillStyle = "rgb("+r+","+g+","+b+")";
+                rc.ctx.fillRect(x,y,1,5);
             }
             x++;
         }
@@ -225,6 +287,7 @@ const rinputs = {
     d: false,
     la: false,
     ra: false,
+    vlook: false,
     handle: function() {
         const cx = Math.sin(radians(camera.r))/camera.size*camera.speed;
         const cy = Math.cos(radians(camera.r))/camera.size*camera.speed;
@@ -280,6 +343,10 @@ const rinputs = {
 function rinit() {
     rc.start(800,400);
     camera.init(60,10,2);
+    fsprites = [];
+    coins = 0;
+    level = 1;
+    map = structuredClone(l1);
     for (let x = 0; x < map.length; x++) {
         for (let y = 0; y < map[0].length; y++) {
             if (map[x][y] == 3) {
@@ -291,7 +358,9 @@ function rinit() {
     document.addEventListener("mousemove", function(e) {
         if (document.pointerLockElement == rc.canvas) {
             camera.r += e.movementX/8;
-            //camera.yoff = Math.max(-20,Math.min(20,camera.yoff+e.movementY/5))
+            if (rinputs.vlook) {
+                camera.yoff = Math.max(-140,Math.min(140,camera.yoff-e.movementY/5));
+            }
         }
     });
     document.addEventListener("keydown", function(event) {
@@ -326,6 +395,46 @@ function rinit() {
                 if (map[Math.floor(rayX)][Math.floor(rayY)] == 2) {
                     map[Math.floor(rayX)][Math.floor(rayY)] = 0;
                     break;
+                } else if (map[Math.floor(rayX)][Math.floor(rayY)] == 6) {
+                    if (level == 1) {
+                        level = 2;
+                        map = structuredClone(l2);
+                    }
+                    camera.init(60,10,2);
+                    fsprites = [];
+                    for (let x = 0; x < map.length; x++) {
+                        for (let y = 0; y < map[0].length; y++) {
+                            if (map[x][y] == 3) {
+                                map[x][y] = 0;
+                                new fSprite(x+0.5,y+0.5,coin);
+                            } else if (map[x][y] == 7) {
+                                map[x][y] = 0;
+                                new fSprite(x+0.5,y+0.5,ghost);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (event.key == "f") {
+            rinputs.vlook = !rinputs.vlook;
+            camera.yoff = 0;
+        }
+        if (event.key == "q") {
+            const rayCX = Math.sin(radians(camera.r))/camera.size;
+            const rayCY = Math.cos(radians(camera.r))/camera.size;
+            let rayX = camera.x;
+            let rayY = camera.y;
+            let step = 0;
+            while (step < camera.size*2) {
+                step++;
+                rayX += rayCX;
+                rayY += rayCY;
+                for (let i = 0; i < fsprites.length; i++) {
+                    if (Math.sqrt((rayX-fsprites[i].x)**2+(rayY-fsprites[i].y)**2)<2) {
+                        fsprites[i].remove()
+                        break;
+                    }
                 }
             }
         }
@@ -362,9 +471,11 @@ function rstop() {
 
 const ftorch = new Image();
 ftorch.src = "textures/torch.png";
+const fdagger = new Image();
+fdagger.src = "textures/dagger.png";
 const ftcolor = [1,0.65,0.6];
 let fti = 0
-const fsprites = []
+let fsprites = []
 let coins = 0
 
 function rtick() {
@@ -379,6 +490,7 @@ function rtick() {
         fsprites[i].draw();
     }
     rc.ctx.drawImage(ftorch,450,150,350,350);
+    rc.ctx.drawImage(fdagger,-20,150,350,350);
     rc.ctx.fillStyle = "white";
     rc.ctx.font = "50px Arial";
     rc.ctx.fillText("Coins: "+coins,10,60);
@@ -396,8 +508,8 @@ class fSprite {
     }
     draw() {
         const d = Math.sqrt((this.x-camera.x)**2+(this.y-camera.y)**2)*camera.size;
-        const hwidth = this.txtr.length/d*200;
-        const hheight = this.txtr[0].length/d*200;
+        const hwidth = this.txtr[0].length/d*200;
+        const hheight = this.txtr.length/d*200;
         const ca = degrees(Math.atan2(this.x-camera.x,this.y-camera.y));
         //console.log(this.y-camera.y);
         let ra = ca-camera.r;
@@ -415,13 +527,15 @@ class fSprite {
             if (x > 0 && x < rc.canvas.width) {
                 if (camera.db[Math.floor(x)] > d) {
                     for (let y = 200-hheight; y < 200+hheight; y+=2) {
-                        const tx = Math.abs(Math.floor((x-(sx-hwidth))/(hwidth*2)*this.txtr.length)%this.txtr.length);
-                        const ty = Math.abs(Math.floor((y-(200-hheight))/(hheight*2)*this.txtr[0].length)%this.txtr[0].length);
-                        const r = rcolors.get(this.txtr[tx][ty])[0]*l*ftcolor[0];
-                        const b = rcolors.get(this.txtr[tx][ty])[2]*l*ftcolor[2];
-                        const g = rcolors.get(this.txtr[tx][ty])[1]*l*ftcolor[1];
-                        rc.ctx.fillStyle = "rgb("+r+","+g+","+b+")";
-                        rc.ctx.fillRect(x,y,2.2,2.2);
+                        const tx = Math.abs(Math.floor((x-(sx-hwidth))/(hwidth*2)*this.txtr[0].length)%this.txtr[0].length);
+                        const ty = Math.abs(Math.floor((y-(200-hheight))/(hheight*2)*this.txtr.length)%this.txtr.length);
+                        if (this.txtr[ty][tx] != "") {
+                            const r = rcolors.get(this.txtr[ty][tx])[0]*l*ftcolor[0];
+                            const b = rcolors.get(this.txtr[ty][tx])[2]*l*ftcolor[2];
+                            const g = rcolors.get(this.txtr[ty][tx])[1]*l*ftcolor[1];
+                            rc.ctx.fillStyle = "rgb("+r+","+g+","+b+")";
+                            rc.ctx.fillRect(x,y+camera.yoff,2.2,2.2);
+                        }
                     }
                 }
             }
@@ -429,5 +543,21 @@ class fSprite {
     }
     remove() {
         fsprites.splice(fsprites.indexOf(this),1);
+    }
+}
+
+function rreset() {
+    camera.init(60,10,2);
+    fsprites = [];
+    level = 1;
+    coins = 0;
+    map = structuredClone(l1);
+    for (let x = 0; x < map.length; x++) {
+        for (let y = 0; y < map[0].length; y++) {
+            if (map[x][y] == 3) {
+                map[x][y] = 0;
+                new fSprite(x+0.5,y+0.5,coin);
+            }
+        }
     }
 }
