@@ -22,22 +22,22 @@ rc = {
 }
 
 map = [
-    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,1,1,1,1,1,1,5,1,4,1,5,1,1,1],
     [1,0,0,0,1,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,2,0,0,3,0,0,0,3,0,0,1],
+    [4,3,0,0,2,0,0,3,0,0,0,3,0,0,5],
     [1,0,0,0,1,0,0,0,0,0,0,0,0,0,1],
     [1,1,1,1,1,1,1,2,1,1,1,1,2,1,1],
     [1,0,0,0,0,0,0,0,1,0,1,0,0,0,1],
-    [1,0,0,0,0,0,0,0,1,0,1,0,3,0,1],
+    [5,0,0,0,0,0,0,0,1,0,1,0,3,0,5],
     [1,0,3,0,0,0,0,0,1,0,1,0,0,0,1],
-    [1,0,0,0,0,0,0,0,1,0,1,1,1,1,1],
-    [1,1,1,1,1,1,1,1,1,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    [1,0,0,0,0,0,0,0,1,1,4,1,2,1,1],
+    [1,1,2,1,1,1,1,1,1,0,0,0,0,0,1],
+    [1,0,0,0,1,0,0,0,0,0,0,0,0,0,5],
+    [5,0,0,0,1,0,0,0,0,0,0,0,0,0,1],
+    [4,0,3,0,1,0,0,3,0,0,0,3,0,0,1],
+    [5,0,0,0,1,0,0,0,0,0,0,0,0,0,5],
+    [1,0,0,0,2,0,0,0,0,0,0,0,0,0,1],
+    [1,1,5,1,1,1,1,5,1,4,1,5,1,1,1]
 ]
 
 swall = [
@@ -47,6 +47,28 @@ swall = [
     ["grey","grey","grey","grey","dgrey","grey","grey","grey","grey"],
     ["dgrey","dgrey","dgrey","dgrey","dgrey","dgrey","dgrey","dgrey","dgrey"],
     ["grey","grey","grey","grey","grey","grey","grey","grey","dgrey"],
+    ["grey","grey","grey","grey","grey","grey","grey","grey","dgrey"],
+    ["grey","grey","grey","grey","grey","grey","grey","grey","dgrey"],
+    ["grey","grey","grey","grey","grey","grey","grey","grey","dgrey"]
+]
+painting = [
+    ["grey","grey","grey","grey","dgrey","grey","grey","grey","grey"],
+    ["grey","brown","brown","brown","brown","brown","brown","brown","grey"],
+    ["grey","brown","yellow","yellow","lblue","lblue","lblue","brown","grey"],
+    ["dgrey","brown","yellow","yellow","lblue","lblue","lblue","brown","dgrey"],
+    ["grey","brown","lblue","lblue","lblue","lblue","lblue","brown","dgrey"],
+    ["grey","brown","lblue","lblue","lblue","lblue","green","brown","dgrey"],
+    ["grey","brown","green","green","green","green","green","brown","dgrey"],
+    ["grey","brown","brown","brown","brown","brown","brown","brown","dgrey"],
+    ["grey","grey","grey","grey","grey","grey","grey","grey","dgrey"]
+]
+wwindow = [
+    ["grey","grey","grey","grey","dgrey","grey","grey","grey","grey"],
+    ["grey","grey","grey","grey","black","grey","grey","grey","grey"],
+    ["grey","grey","grey","black","black","black","grey","grey","grey"],
+    ["grey","grey","grey","black","black","black","grey","grey","grey"],
+    ["dgrey","dgrey","dgrey","black","black","black","dgrey","dgrey","dgrey"],
+    ["grey","grey","grey","black","black","black","grey","grey","dgrey"],
     ["grey","grey","grey","grey","grey","grey","grey","grey","dgrey"],
     ["grey","grey","grey","grey","grey","grey","grey","grey","dgrey"],
     ["grey","grey","grey","grey","grey","grey","grey","grey","dgrey"]
@@ -89,7 +111,9 @@ rcolors = new Map([
     ["black",[0,0,0]],
     ["brown",[117,77,50]],
     ["dbrown",[69,45,30]],
-    ["yellow",[255,255,0]]
+    ["yellow",[255,255,0]],
+    ["green",[0,255,0]],
+    ["lblue",[112,193,255]]
 ])
 
 camera = {
@@ -120,6 +144,12 @@ camera = {
                     break;
                 } else if (map[Math.floor(rayX)][Math.floor(rayY)] == 2) {
                     wt = door;
+                    break;
+                } else if (map[Math.floor(rayX)][Math.floor(rayY)] == 4) {
+                    wt = painting;
+                    break;
+                } else if (map[Math.floor(rayX)][Math.floor(rayY)] == 5) {
+                    wt = wwindow;
                     break;
                 }
             }
@@ -168,6 +198,15 @@ camera = {
             }
             x++;
         }
+    },
+    update() {
+        for (let i = 0; i < fsprites.length; i++) {
+            if (fsprites[i].txtr == coin && Math.sqrt((fsprites[i].x-camera.x)**2+(fsprites[i].y-camera.y)**2) < 1) {
+                fsprites[i].remove();
+                i--;
+                coins++;
+            }
+        }
     }
 }
 
@@ -191,19 +230,43 @@ const rinputs = {
         const cy = Math.cos(radians(camera.r))/camera.size*camera.speed;
         if (this.w) {
             camera.x += cx;
+            if (map[Math.floor(camera.x)][Math.floor(camera.y)] != 0) {
+                camera.x -= cx;
+            }
             camera.y += cy;
+            if (map[Math.floor(camera.x)][Math.floor(camera.y)] != 0) {
+                camera.y -= cy;
+            }
         }
         if (this.s) {
             camera.x -= cx;
+            if (map[Math.floor(camera.x)][Math.floor(camera.y)] != 0) {
+                camera.x += cx;
+            }
             camera.y -= cy;
+            if (map[Math.floor(camera.x)][Math.floor(camera.y)] != 0) {
+                camera.y += cy;
+            }
         }
         if (this.d) {
             camera.x += cy*0.5;
+            if (map[Math.floor(camera.x)][Math.floor(camera.y)] != 0) {
+                camera.x -= cy*0.5;
+            }
             camera.y -= cx*0.5;
+            if (map[Math.floor(camera.x)][Math.floor(camera.y)] != 0) {
+                camera.y += cx*0.5;
+            }
         }
         if (this.a) {
             camera.x -= cy*0.5;
+            if (map[Math.floor(camera.x)][Math.floor(camera.y)] != 0) {
+                camera.x += cx*0.5;
+            }
             camera.y += cx*0.5;
+            if (map[Math.floor(camera.x)][Math.floor(camera.y)] != 0) {
+                camera.y -= cx*0.5;
+            }
         }
         if (this.la) {
             camera.r -= 5;
@@ -221,13 +284,13 @@ function rinit() {
         for (let y = 0; y < map[0].length; y++) {
             if (map[x][y] == 3) {
                 map[x][y] = 0;
-                new fSprite(x,y,coin);
+                new fSprite(x+0.5,y+0.5,coin);
             }
         }
     }
     document.addEventListener("mousemove", function(e) {
         if (document.pointerLockElement == rc.canvas) {
-            camera.r += e.movementX/5;
+            camera.r += e.movementX/8;
             //camera.yoff = Math.max(-20,Math.min(20,camera.yoff+e.movementY/5))
         }
     });
@@ -299,17 +362,27 @@ function rstop() {
 
 const ftorch = new Image();
 ftorch.src = "textures/torch.png";
-ftcolor = [1,0.65,0.6];
-fti = 0
-fsprites = []
+const ftcolor = [1,0.65,0.6];
+let fti = 0
+const fsprites = []
+let coins = 0
 
 function rtick() {
     rc.clear();
     camera.render();
+    fsprites.sort(function(a,b) {
+        const d1 = Math.sqrt((a.x-camera.x)**2+(a.y-camera.y)**2);
+        const d2 = Math.sqrt((b.x-camera.x)**2+(b.y-camera.y)**2);
+        return d2-d1;
+    });
     for (let i = 0; i < fsprites.length; i++) {
         fsprites[i].draw();
     }
     rc.ctx.drawImage(ftorch,450,150,350,350);
+    rc.ctx.fillStyle = "white";
+    rc.ctx.font = "50px Arial";
+    rc.ctx.fillText("Coins: "+coins,10,60);
+    camera.update();
     rinputs.handle();
     fti = Math.max(-3,Math.min(3,fti+((Math.random()*2)-1)));
 }
@@ -338,20 +411,23 @@ class fSprite {
         //rc.ctx.fillStyle = "red";
         //rc.ctx.fillRect(sx-1,20,3,360);
         const l = (1-d/(50+fti));
-        for (let x = sx-hwidth; x < sx+hwidth; x++) {
+        for (let x = sx-hwidth; x < sx+hwidth; x+=2) {
             if (x > 0 && x < rc.canvas.width) {
                 if (camera.db[Math.floor(x)] > d) {
-                    for (let y = 200-hheight; y < 200+hheight; y++) {
+                    for (let y = 200-hheight; y < 200+hheight; y+=2) {
                         const tx = Math.abs(Math.floor((x-(sx-hwidth))/(hwidth*2)*this.txtr.length)%this.txtr.length);
                         const ty = Math.abs(Math.floor((y-(200-hheight))/(hheight*2)*this.txtr[0].length)%this.txtr[0].length);
                         const r = rcolors.get(this.txtr[tx][ty])[0]*l*ftcolor[0];
                         const b = rcolors.get(this.txtr[tx][ty])[2]*l*ftcolor[2];
                         const g = rcolors.get(this.txtr[tx][ty])[1]*l*ftcolor[1];
                         rc.ctx.fillStyle = "rgb("+r+","+g+","+b+")";
-                        rc.ctx.fillRect(x,y,1,1);
+                        rc.ctx.fillRect(x,y,2.2,2.2);
                     }
                 }
             }
         }
+    }
+    remove() {
+        fsprites.splice(fsprites.indexOf(this),1);
     }
 }
